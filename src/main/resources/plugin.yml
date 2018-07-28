@@ -1,0 +1,8 @@
+name: Stats
+version: 5.0
+main: nl.lolmewn.stats.Main
+author: Lolmewn
+api-version: 1.13
+commands:
+  stats:
+    description: The main Stats command
