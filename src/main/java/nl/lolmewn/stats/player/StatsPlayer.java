@@ -1,12 +1,14 @@
 package nl.lolmewn.stats.player;
 
+import io.reactivex.Flowable;
 import nl.lolmewn.stats.stat.Stat;
+import org.reactivestreams.Subscriber;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
-public class StatsPlayer {
+public class StatsPlayer extends Flowable<StatsContainer> {
+
+    private Set<Subscriber<? super StatsContainer>> subscribers = new HashSet<>();
 
     private final UUID uuid;
     private final Map<Stat, StatsContainer> stats = new LinkedHashMap<>();
@@ -21,8 +23,15 @@ public class StatsPlayer {
 
     public StatsContainer getStats(Stat stat) {
         if (!this.stats.containsKey(stat)) {
-            this.stats.put(stat, new StatsContainer(stat));
+            StatsContainer container = new StatsContainer(stat);
+            this.stats.put(stat, container);
+            this.subscribers.forEach(sub -> sub.onNext(container));
         }
         return this.stats.get(stat);
+    }
+
+    @Override
+    protected void subscribeActual(Subscriber<? super StatsContainer> subscriber) {
+        this.subscribers.add(subscriber);
     }
 }

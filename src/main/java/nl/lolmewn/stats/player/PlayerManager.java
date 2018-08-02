@@ -1,11 +1,13 @@
 package nl.lolmewn.stats.player;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import io.reactivex.Flowable;
+import org.reactivestreams.Subscriber;
 
-public class PlayerManager {
+import java.util.*;
+
+public class PlayerManager extends Flowable<StatsPlayer> {
+
+    private Set<Subscriber<? super StatsPlayer>> subscribers = new HashSet<>();
 
     private static PlayerManager instance;
     private Map<UUID, StatsPlayer> players = new HashMap<>();
@@ -23,5 +25,15 @@ public class PlayerManager {
 
     public void addPlayer(StatsPlayer player) {
         this.players.put(player.getUuid(), player);
+        this.subscribers.forEach(sub -> sub.onNext(player));
+    }
+
+    public void removePlayer(StatsPlayer player) {
+        this.players.remove(player.getUuid());
+    }
+
+    @Override
+    protected void subscribeActual(Subscriber<? super StatsPlayer> subscriber) {
+        this.subscribers.add(subscriber);
     }
 }

@@ -1,6 +1,6 @@
 name: Stats
 version: 5.0
-main: nl.lolmewn.stats.Main
+main: nl.lolmewn.stats.BukkitMain
 author: Lolmewn
 api-version: 1.13
 commands:

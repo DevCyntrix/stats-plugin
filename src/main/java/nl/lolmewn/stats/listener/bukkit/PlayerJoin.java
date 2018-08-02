@@ -1,4 +1,4 @@
-package nl.lolmewn.stats.listener;
+package nl.lolmewn.stats.listener.bukkit;
 
 import nl.lolmewn.stats.player.PlayerManager;
 import nl.lolmewn.stats.player.StatsPlayer;

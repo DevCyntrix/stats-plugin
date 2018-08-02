@@ -1,11 +1,17 @@
 package nl.lolmewn.stats.player;
 
+import io.reactivex.Flowable;
 import nl.lolmewn.stats.stat.Stat;
+import org.reactivestreams.Subscriber;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-public class StatsContainer {
+public class StatsContainer extends Flowable<StatTimeEntry> {
+
+    private final Set<Subscriber<? super StatTimeEntry>> subscribers = new HashSet<Subscriber<? super StatTimeEntry>>();
 
     private final Stat stat;
     private final List<StatTimeEntry> entries = new ArrayList<>();
@@ -18,6 +24,7 @@ public class StatsContainer {
     public void addEntry(StatTimeEntry entry) {
         this.entries.add(entry);
         this.total += entry.getAmount();
+        this.subscribers.forEach(sub -> sub.onNext(entry));
     }
 
     public List<StatTimeEntry> getEntries() {
@@ -30,5 +37,10 @@ public class StatsContainer {
 
     public long getTotal() {
         return total;
+    }
+
+    @Override
+    protected void subscribeActual(Subscriber<? super StatTimeEntry> subscriber) {
+        this.subscribers.add(subscriber);
     }
 }
