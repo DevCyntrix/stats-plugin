@@ -5,8 +5,9 @@ import nl.lolmewn.stats.listener.Playtime;
 import nl.lolmewn.stats.listener.bukkit.BlockBreak;
 import nl.lolmewn.stats.listener.bukkit.PlayerJoin;
 import nl.lolmewn.stats.player.PlayerManager;
-import nl.lolmewn.stats.stat.Stat;
 import nl.lolmewn.stats.stat.StatManager;
+import nl.lolmewn.stats.storage.mysql.MySQLConfig;
+import nl.lolmewn.stats.storage.mysql.MySQLStorage;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -22,8 +23,9 @@ public class BukkitMain extends JavaPlugin {
         super.getConfig().options().copyDefaults(true);
         super.saveConfig();
 
-        StatManager.getInstance().addStat(new Stat("Blocks broken", "Amount of blocks broken"));
-        StatManager.getInstance().addStat(new Stat("Playtime", "Amount of seconds played"));
+        SharedMain.registerStats();
+
+        new MySQLStorage(this.getMySQLConfig());
 
         new PlayerJoin(this);
         new BlockBreak(this);
@@ -31,6 +33,13 @@ public class BukkitMain extends JavaPlugin {
 
         this.globalStats = new GlobalStats();
         SharedMain.serverUuid = this.getServer().getServerId();
+    }
+
+    private MySQLConfig getMySQLConfig() {
+        return new MySQLConfig(
+                this.getConfig().getString("mysql.url"),
+                this.getConfig().getString("mysql.username"),
+                this.getConfig().getString("mysql.password"));
     }
 
     @Override
@@ -45,7 +54,7 @@ public class BukkitMain extends JavaPlugin {
             return true;
         }
         StatManager.getInstance().getStats().forEach(stat ->
-                PlayerManager.getInstance().getPlayer(((Player) sender).getUniqueId()).ifPresent(player ->
+                PlayerManager.getInstance().getPlayer(((Player) sender).getUniqueId()).subscribe(player ->
                         sender.sendMessage(ChatColor.LIGHT_PURPLE + stat.getName() + ": " + ChatColor.BLUE +
                                 player.getStats(stat).getTotal())));
         return false;

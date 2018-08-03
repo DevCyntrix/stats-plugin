@@ -21,7 +21,7 @@ public class BlockBreak {
     @Listener
     public void onBlockBreak(ChangeBlockEvent.Break event) {
         event.getCause().first(Player.class).ifPresent(player -> {
-            PlayerManager.getInstance().getPlayer(player.getUniqueId()).ifPresent(statsPlayer -> {
+            PlayerManager.getInstance().getPlayer(player.getUniqueId()).subscribe(statsPlayer -> {
                 StatManager.getInstance().getStat("Blocks broken").ifPresent(stat -> {
                     Map<String, Object> metadata = generateMetadata(event);
                     statsPlayer.getStats(stat).addEntry(

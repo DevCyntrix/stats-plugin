@@ -7,6 +7,7 @@ import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.stat.StatManager;
 import org.bukkit.Bukkit;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class Playtime {
@@ -24,10 +25,11 @@ public class Playtime {
         }
         this.disposable = Observable.interval(1, TimeUnit.SECONDS).forEach(ignored ->
                 Bukkit.getServer().getOnlinePlayers().forEach(player ->
-                        PlayerManager.getInstance().getPlayer(player.getUniqueId()).ifPresent(statsPlayer ->
+                        PlayerManager.getInstance().getPlayer(player.getUniqueId()).subscribe(statsPlayer ->
                                 StatManager.getInstance().getStat("Playtime").ifPresent(stat ->
                                         statsPlayer.getStats(stat).addEntry(
-                                                new StatTimeEntry(System.currentTimeMillis(), 1)
+                                                new StatTimeEntry(System.currentTimeMillis(), 1,
+                                                        Map.of("world", player.getWorld().getUID().toString()))
                                         )
                                 )
                         )

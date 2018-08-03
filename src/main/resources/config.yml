@@ -1,5 +1,4 @@
 mysql:
-  host: jdbc:mysql://localhost:3306/
-  database: stats5
+  url: jdbc:mysql://localhost:3306/stats5
   username: username
   password: password

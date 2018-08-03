@@ -4,8 +4,9 @@ import nl.lolmewn.stats.global.GlobalStats;
 import nl.lolmewn.stats.listener.Playtime;
 import nl.lolmewn.stats.listener.sponge.BlockBreak;
 import nl.lolmewn.stats.listener.sponge.PlayerJoin;
-import nl.lolmewn.stats.stat.Stat;
 import nl.lolmewn.stats.stat.StatManager;
+import nl.lolmewn.stats.stat.impl.BlockBreakStat;
+import nl.lolmewn.stats.stat.impl.PlaytimeStat;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.event.game.state.GameStoppedEvent;
@@ -20,8 +21,8 @@ public class SpongeMain {
 
     @Listener
     public void onServerStart(GameStartedServerEvent event) {
-        StatManager.getInstance().addStat(new Stat("Blocks broken", "Amount of blocks broken"));
-        StatManager.getInstance().addStat(new Stat("Playtime", "Amount of seconds played"));
+        StatManager.getInstance().addStat(new BlockBreakStat());
+        StatManager.getInstance().addStat(new PlaytimeStat());
 
         new PlayerJoin(this);
         new Playtime();

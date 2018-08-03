@@ -1,6 +1,10 @@
 package nl.lolmewn.stats.stat;
 
-public class Stat {
+import nl.lolmewn.stats.player.StatMetaData;
+
+import java.util.Collection;
+
+public abstract class Stat {
 
     private final String name;
     private final String description;
@@ -17,4 +21,6 @@ public class Stat {
     public String getDescription() {
         return description;
     }
+
+    public abstract Collection<StatMetaData> getMetaData();
 }

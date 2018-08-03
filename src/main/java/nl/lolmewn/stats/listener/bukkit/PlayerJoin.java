@@ -1,7 +1,5 @@
 package nl.lolmewn.stats.listener.bukkit;
 
-import nl.lolmewn.stats.player.PlayerManager;
-import nl.lolmewn.stats.player.StatsPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -16,6 +14,6 @@ public class PlayerJoin implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        PlayerManager.getInstance().addPlayer(new StatsPlayer(event.getPlayer().getUniqueId()));
+//        PlayerManager.getInstance().addPlayer(new StatsPlayer(event.getPlayer().getUniqueId()));
     }
 }
