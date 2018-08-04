@@ -4,19 +4,29 @@ import io.reactivex.disposables.Disposable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class SimpleStatContainer {
 
     private final Disposable subscription;
-
-    private final Map<String, Integer> values = new HashMap<>();
+    private final StatsContainer parent;
+    private final Map<Map<String, Object>, Long> values = new HashMap<>();
 
     public SimpleStatContainer(StatsContainer parent) {
+        this.parent = parent;
         this.subscription = parent.subscribe(this::handleUpdate);
     }
 
-    public void handleUpdate(StatTimeEntry entry) {
+    private void handleUpdate(StatTimeEntry entry) {
+        Map<String, Object> collect = this.parent.getStat().getMetaData().stream().filter(StatMetaData::isGroupable)
+                .map(StatMetaData::getId)
+                .collect(Collectors.toMap(Function.identity(), o -> entry.getMetadata().get(o)));
+        this.values.merge(collect, entry.getAmount(), Long::sum);
+    }
 
+    public Map<Map<String, Object>, Long> getValues() {
+        return values;
     }
 
     public void shutdown() {

@@ -4,24 +4,33 @@ import nl.lolmewn.stats.Util;
 import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.player.StatsContainer;
 import nl.lolmewn.stats.player.StatsPlayer;
+import nl.lolmewn.stats.stat.Stat;
 import nl.lolmewn.stats.storage.mysql.StatMySQLHandler;
 
 import java.sql.*;
 import java.util.*;
 
-public class BlockBreakStorage implements StatMySQLHandler {
+@SuppressWarnings("SqlResolve")
+public class GeneralPlayerStorage implements StatMySQLHandler {
+
+    private final Stat stat;
+
+    public GeneralPlayerStorage(Stat stat) {
+        this.stat = stat;
+    }
+
+    private String getTableName() {
+        return "stats_" + this.stat.getName().toLowerCase().replace(" ", "_");
+    }
+
     @Override
     public void generateTables(Connection con) throws SQLException {
         try (Statement st = con.createStatement()) {
-            st.execute("CREATE TABLE IF NOT EXISTS `stats_block_break` (" +
+            st.execute("CREATE TABLE IF NOT EXISTS `" + getTableName() + "` (" +
                     "  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT," +
                     "  `player` BINARY(16) NOT NULL," +
                     "  `world` BINARY(16) NOT NULL," +
-                    "  `loc_x` INT NOT NULL," +
-                    "  `loc_y` INT NOT NULL," +
-                    "  `loc_z` INT NOT NULL," +
-                    "  `material` TEXT NOT NULL," +
-                    "  `tool` TEXT NOT NULL," +
+                    "  `amount` BIGINT NOT NULL," +
                     "  `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," +
                     "  PRIMARY KEY (`id`)," +
                     "  UNIQUE INDEX `id_UNIQUE` (`id` ASC)," +
@@ -32,7 +41,8 @@ public class BlockBreakStorage implements StatMySQLHandler {
     @Override
     public Collection<StatTimeEntry> loadEntries(Connection con, UUID uuid) throws SQLException {
         List<StatTimeEntry> entries = new ArrayList<>();
-        try (PreparedStatement st = con.prepareStatement("SELECT *,HEX(world) as world_uuid FROM stats_block_break WHERE player=UNHEX(?)")) {
+        try (PreparedStatement st = con.prepareStatement("SELECT HEX(world) as world_uuid, amount, timestamp " +
+                "FROM " + getTableName() + " WHERE player=UNHEX(?)")) {
             st.setString(1, uuid.toString().replace("-", ""));
             ResultSet set = st.executeQuery();
             while (set != null && set.next()) {
@@ -41,14 +51,9 @@ public class BlockBreakStorage implements StatMySQLHandler {
                     throw new IllegalStateException("Found world UUID that is not a UUID: " + set.getString("world_uuid"));
                 }
                 entries.add(new StatTimeEntry(
-                        set.getTimestamp("timestamp").getTime(), 1,
-                        Map.of("world", worldUUID.get(),
-                                "loc_x", set.getInt("loc_x"),
-                                "loc_y", set.getInt("loc_y"),
-                                "loc_z", set.getInt("loc_z"),
-                                "material", set.getString("material"),
-                                "tool", set.getString("tool"))
-                ));
+                        set.getTimestamp("timestamp").getTime(), set.getLong("amount"),
+                        Map.of("world", worldUUID.get()
+                        )));
             }
         }
         return entries;
@@ -56,16 +61,12 @@ public class BlockBreakStorage implements StatMySQLHandler {
 
     @Override
     public void storeEntry(Connection con, StatsPlayer player, StatsContainer container, StatTimeEntry entry) throws SQLException {
-        try (PreparedStatement st = con.prepareStatement("INSERT INTO stats_block_break (player, world, loc_x, loc_y, loc_z, material, tool, timestamp) " +
-                "VALUES (UNHEX(?), UNHEX(?), ?, ?, ?, ?, ?, ?)")) {
+        try (PreparedStatement st = con.prepareStatement("INSERT INTO " + getTableName() + " (player, world, amount, timestamp) " +
+                "VALUES (UNHEX(?), UNHEX(?), ?, ?)")) {
             st.setString(1, player.getUuid().toString().replace("-", ""));
             st.setString(2, entry.getMetadata().get("world").toString().replace("-", ""));
-            st.setInt(3, (Integer) entry.getMetadata().get("loc_x"));
-            st.setInt(4, (Integer) entry.getMetadata().get("loc_y"));
-            st.setInt(5, (Integer) entry.getMetadata().get("loc_z"));
-            st.setString(6, entry.getMetadata().get("material").toString());
-            st.setString(7, entry.getMetadata().get("tool").toString());
-            st.setTimestamp(8, new Timestamp(entry.getTimestamp()));
+            st.setLong(3, entry.getAmount());
+            st.setTimestamp(4, new Timestamp(entry.getTimestamp()));
             st.execute();
         }
     }

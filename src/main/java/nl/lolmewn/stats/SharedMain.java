@@ -7,6 +7,7 @@ import nl.lolmewn.stats.stat.impl.PlaytimeStat;
 public class SharedMain {
 
     protected static String serverUuid;
+    private static boolean isDebug = false;
 
     public static String getServerUuid() {
         return serverUuid;
@@ -15,5 +16,15 @@ public class SharedMain {
     public static void registerStats() {
         StatManager.getInstance().addStat(new PlaytimeStat());
         StatManager.getInstance().addStat(new BlockBreakStat());
+    }
+
+    public static void setDebug(boolean state) {
+        isDebug = state;
+    }
+
+    public static void debug(String message) {
+        if (isDebug) {
+            System.out.println("[StatsDebug] " + message);
+        }
     }
 }

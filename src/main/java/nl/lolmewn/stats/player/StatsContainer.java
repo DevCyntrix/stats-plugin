@@ -16,15 +16,21 @@ public class StatsContainer extends Flowable<StatTimeEntry> {
     private final Stat stat;
     private final List<StatTimeEntry> entries = new ArrayList<>();
     private long total;
+    private final SimpleStatContainer simpleStatContainer;
 
     public StatsContainer(Stat stat) {
         this.stat = stat;
+        this.simpleStatContainer = new SimpleStatContainer(this);
     }
 
     public void addEntry(StatTimeEntry entry) {
         this.entries.add(entry);
         this.total += entry.getAmount();
         this.subscribers.forEach(sub -> sub.onNext(entry));
+    }
+
+    public SimpleStatContainer getSimpleStatContainer() {
+        return simpleStatContainer;
     }
 
     public List<StatTimeEntry> getEntries() {

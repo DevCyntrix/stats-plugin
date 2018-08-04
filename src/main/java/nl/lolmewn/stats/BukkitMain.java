@@ -14,25 +14,36 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.sql.SQLException;
+import java.util.UUID;
+
 public class BukkitMain extends JavaPlugin {
 
     private GlobalStats globalStats;
 
     @Override
     public void onEnable() {
+        super.getConfig().addDefault("server-id", UUID.randomUUID().toString());
         super.getConfig().options().copyDefaults(true);
         super.saveConfig();
 
         SharedMain.registerStats();
 
-        new MySQLStorage(this.getMySQLConfig());
+        try {
+            new MySQLStorage(this.getMySQLConfig());
+        } catch (SQLException e) {
+            e.printStackTrace();
+            this.getLogger().severe("Could not start MySQL, not starting plugin.");
+            return;
+        }
 
         new PlayerJoin(this);
         new BlockBreak(this);
         new Playtime();
 
+        SharedMain.serverUuid = super.getConfig().getString("server-id");
+        SharedMain.setDebug(super.getConfig().getBoolean("debug", false));
         this.globalStats = new GlobalStats();
-        SharedMain.serverUuid = this.getServer().getServerId();
     }
 
     private MySQLConfig getMySQLConfig() {

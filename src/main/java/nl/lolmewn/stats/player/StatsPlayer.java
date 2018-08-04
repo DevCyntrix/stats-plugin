@@ -30,6 +30,10 @@ public class StatsPlayer extends Flowable<StatsContainer> {
         return this.stats.get(stat);
     }
 
+    public Collection<StatsContainer> getContainers() {
+        return stats.values();
+    }
+
     @Override
     protected void subscribeActual(Subscriber<? super StatsContainer> subscriber) {
         this.subscribers.add(subscriber);
