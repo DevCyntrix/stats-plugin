@@ -49,12 +49,20 @@ public class PlaytimeStorage implements StatMySQLHandler {
 
     @Override
     public void storeEntry(Connection con, StatsPlayer player, StatsContainer container, StatTimeEntry entry) throws SQLException {
-        try (PreparedStatement st = con.prepareStatement("INSERT INTO stats_playtime (player, world, amount) " +
-                "VALUES (UNHEX(?), UNHEX(?), ?) ON DUPLICATE KEY UPDATE amount=amount+VALUES(amount)")) {
-            st.setString(1, player.getUuid().toString().replace("-", ""));
-            st.setString(2, entry.getMetadata().get("world").toString().replace("-", ""));
-            st.setLong(3, entry.getAmount());
-            st.execute();
+        try (PreparedStatement update = con.prepareStatement("UPDATE stats_playtime SET amount=amount+? " +
+                "WHERE player=UNHEX(?) AND world=UNHEX(?)")) {
+            update.setLong(1, entry.getAmount());
+            update.setString(2, player.getUuid().toString().replace("-", ""));
+            update.setString(3, entry.getMetadata().get("world").toString().replace("-", ""));
+            if (update.executeUpdate() == 0) {
+                try (PreparedStatement st = con.prepareStatement("INSERT INTO stats_playtime (player, world, amount) " +
+                        "VALUES (UNHEX(?), UNHEX(?), ?) ON DUPLICATE KEY UPDATE amount=amount+VALUES(amount)")) {
+                    st.setString(1, player.getUuid().toString().replace("-", ""));
+                    st.setString(2, entry.getMetadata().get("world").toString().replace("-", ""));
+                    st.setLong(3, entry.getAmount());
+                    st.execute();
+                }
+            }
         }
     }
 }

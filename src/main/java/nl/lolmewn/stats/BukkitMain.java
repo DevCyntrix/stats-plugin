@@ -3,6 +3,7 @@ package nl.lolmewn.stats;
 import nl.lolmewn.stats.global.GlobalStats;
 import nl.lolmewn.stats.listener.Playtime;
 import nl.lolmewn.stats.listener.bukkit.BlockBreak;
+import nl.lolmewn.stats.listener.bukkit.PlayerDeath;
 import nl.lolmewn.stats.listener.bukkit.PlayerJoin;
 import nl.lolmewn.stats.player.PlayerManager;
 import nl.lolmewn.stats.stat.StatManager;
@@ -39,6 +40,7 @@ public class BukkitMain extends JavaPlugin {
 
         new PlayerJoin(this);
         new BlockBreak(this);
+        new PlayerDeath(this);
         new Playtime();
 
         SharedMain.serverUuid = super.getConfig().getString("server-id");

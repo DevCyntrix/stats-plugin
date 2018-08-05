@@ -2,6 +2,8 @@ package nl.lolmewn.stats.storage.mysql;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.functions.Consumer;
 import nl.lolmewn.stats.player.PlayerManager;
 import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.player.StatsContainer;
@@ -10,6 +12,7 @@ import nl.lolmewn.stats.stat.Stat;
 import nl.lolmewn.stats.stat.StatManager;
 import nl.lolmewn.stats.storage.StorageManager;
 import nl.lolmewn.stats.storage.mysql.impl.BlockBreakStorage;
+import nl.lolmewn.stats.storage.mysql.impl.DeathStorage;
 import nl.lolmewn.stats.storage.mysql.impl.GeneralPlayerStorage;
 import nl.lolmewn.stats.storage.mysql.impl.PlaytimeStorage;
 
@@ -22,6 +25,7 @@ public class MySQLStorage extends StorageManager {
 
     private final HikariDataSource dataSource;
     private Map<Stat, StatMySQLHandler> handlers = new HashMap<>();
+    private final CompositeDisposable disposable = new CompositeDisposable();
 
     public MySQLStorage(MySQLConfig config) throws SQLException {
         System.out.println("Starting MySQL Storage Engine...");
@@ -40,10 +44,25 @@ public class MySQLStorage extends StorageManager {
         this.registerHandlers();
         this.generateTables();
         System.out.println("MySQL ready to go!");
-        PlayerManager.getInstance().subscribe(player -> player.subscribe(container ->
-                container.subscribe(entry -> this.storeEntry(player, container, entry))));
+        this.disposable.add(PlayerManager.getInstance().subscribe(this.getPlayerConsumer()));
     }
 
+    private Consumer<StatsPlayer> getPlayerConsumer() {
+        return player -> {
+            player.getContainers().forEach(cont -> // Listen to updates of already-in-place containers
+                    this.disposable.add(cont.subscribe(this.getStatTimeEntryConsumer(player, cont))));
+            this.disposable.add(player.subscribe(this.getContainerConsumer(player))); // Listen to new containers
+        };
+    }
+
+    private Consumer<StatsContainer> getContainerConsumer(StatsPlayer player) {
+        return statsContainer ->
+                this.disposable.add(statsContainer.subscribe(this.getStatTimeEntryConsumer(player, statsContainer)));
+    }
+
+    private Consumer<StatTimeEntry> getStatTimeEntryConsumer(StatsPlayer player, StatsContainer statsContainer) {
+        return statTimeEntry -> this.storeEntry(player, statsContainer, statTimeEntry);
+    }
     private void generateTables() throws SQLException {
         try (Connection con = getConnection()) {
             for (StatMySQLHandler handler : this.handlers.values()) {
@@ -55,6 +74,7 @@ public class MySQLStorage extends StorageManager {
     private void registerHandlers() {
         StatManager.getInstance().getStat("Playtime").ifPresent(stat -> this.handlers.put(stat, new PlaytimeStorage()));
         StatManager.getInstance().getStat("Blocks broken").ifPresent(stat -> this.handlers.put(stat, new BlockBreakStorage()));
+        StatManager.getInstance().getStat("Deaths").ifPresent(stat -> this.handlers.put(stat, new DeathStorage()));
 
         // Register all other stats to the default
         StatManager.getInstance().getStats().stream()

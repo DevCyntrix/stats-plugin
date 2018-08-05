@@ -49,7 +49,7 @@ public class GlobalStats {
 
     private Consumer<StatTimeEntry> getStatTimeEntryConsumer(StatsPlayer player, StatsContainer statsContainer) {
         return statTimeEntry -> {
-            System.out.println(String.format("%s updated %s with %d to %d at %d",
+            SharedMain.debug(String.format("%s updated %s with %d to %d at %d",
                     player.getUuid().toString(), statsContainer.getStat().getName(),
                     statTimeEntry.getAmount(), statsContainer.getTotal(), statTimeEntry.getTimestamp()));
             String message = this.gson.toJson(Map.of(
@@ -62,7 +62,7 @@ public class GlobalStats {
                     ),
                     "stat", statsContainer.getStat().getName()
             ));
-            System.out.println("Publishing " + message);
+            SharedMain.debug("Publishing " + message);
             this.channel.basicPublish("", routingKey, null, message.getBytes());
         };
     }
@@ -70,9 +70,12 @@ public class GlobalStats {
     private void setupRabbitMq() throws IOException, TimeoutException {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setAutomaticRecoveryEnabled(true);
+        factory.setUsername("stats5");
+        factory.setPassword("stats5");
+        factory.setHost("lolmewn.nl");
+        factory.setPort(5672);
         this.rabbitMqConnection = factory.newConnection();
         this.channel = this.rabbitMqConnection.createChannel();
-        this.channel.queueDeclare("stats.global", true, false, false, null);
     }
 
     public void shutdown() {
