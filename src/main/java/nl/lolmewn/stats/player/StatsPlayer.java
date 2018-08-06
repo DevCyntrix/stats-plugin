@@ -1,15 +1,18 @@
 package nl.lolmewn.stats.player;
 
-import io.reactivex.Flowable;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.subjects.PublishSubject;
 import nl.lolmewn.stats.stat.Stat;
-import org.reactivestreams.Subscriber;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
 
-public class StatsPlayer extends Flowable<StatsContainer> {
+public class StatsPlayer {
 
-    private Set<Subscriber<? super StatsContainer>> subscribers = new HashSet<>();
-
+    private final PublishSubject<StatsContainer> publishSubject = PublishSubject.create();
     private final UUID uuid;
     private final Map<Stat, StatsContainer> stats = new LinkedHashMap<>();
 
@@ -25,7 +28,7 @@ public class StatsPlayer extends Flowable<StatsContainer> {
         if (!this.stats.containsKey(stat)) {
             StatsContainer container = new StatsContainer(stat);
             this.stats.put(stat, container);
-            this.subscribers.forEach(sub -> sub.onNext(container));
+            this.publishSubject.onNext(container);
         }
         return this.stats.get(stat);
     }
@@ -34,8 +37,7 @@ public class StatsPlayer extends Flowable<StatsContainer> {
         return stats.values();
     }
 
-    @Override
-    protected void subscribeActual(Subscriber<? super StatsContainer> subscriber) {
-        this.subscribers.add(subscriber);
+    public Disposable subscribe(Consumer<StatsContainer> containerConsumer, Consumer<? super Throwable> handleError) {
+        return this.publishSubject.subscribe(containerConsumer, handleError);
     }
 }

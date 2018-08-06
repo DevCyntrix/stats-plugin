@@ -1,8 +1,10 @@
 package nl.lolmewn.stats;
 
+import hu.akarnokd.rxjava2.debug.validator.RxJavaProtocolValidator;
 import nl.lolmewn.stats.global.GlobalStats;
 import nl.lolmewn.stats.listener.Playtime;
 import nl.lolmewn.stats.listener.bukkit.BlockBreak;
+import nl.lolmewn.stats.listener.bukkit.EntityDeath;
 import nl.lolmewn.stats.listener.bukkit.PlayerDeath;
 import nl.lolmewn.stats.listener.bukkit.PlayerJoin;
 import nl.lolmewn.stats.player.PlayerManager;
@@ -24,6 +26,8 @@ public class BukkitMain extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        RxJavaProtocolValidator.enableAndChain();
+        RxJavaProtocolValidator.setOnViolationHandler(Throwable::printStackTrace);
         super.getConfig().addDefault("server-id", UUID.randomUUID().toString());
         super.getConfig().options().copyDefaults(true);
         super.saveConfig();
@@ -41,6 +45,7 @@ public class BukkitMain extends JavaPlugin {
         new PlayerJoin(this);
         new BlockBreak(this);
         new PlayerDeath(this);
+        new EntityDeath(this);
         new Playtime();
 
         SharedMain.serverUuid = super.getConfig().getString("server-id");
@@ -68,10 +73,17 @@ public class BukkitMain extends JavaPlugin {
             sender.sendMessage("Player only");
             return true;
         }
+        sender.sendMessage(ChatColor.RED + "Your total stats");
         StatManager.getInstance().getStats().forEach(stat ->
                 PlayerManager.getInstance().getPlayer(((Player) sender).getUniqueId()).subscribe(player ->
-                        sender.sendMessage(ChatColor.LIGHT_PURPLE + stat.getName() + ": " + ChatColor.BLUE +
-                                player.getStats(stat).getTotal())));
-        return false;
+                                sender.sendMessage(
+                                        ChatColor.DARK_GREEN + stat.getName() +
+                                                ChatColor.RED + ": " +
+                                                ChatColor.GOLD + player.getStats(stat).getTotal()),
+                        err -> {
+                            sender.sendMessage(ChatColor.RED + "An Unknown error occurred!");
+                            System.out.println("Command error: " + err);
+                        }));
+        return true;
     }
 }

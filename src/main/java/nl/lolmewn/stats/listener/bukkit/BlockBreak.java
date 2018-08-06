@@ -1,5 +1,6 @@
 package nl.lolmewn.stats.listener.bukkit;
 
+import nl.lolmewn.stats.Util;
 import nl.lolmewn.stats.player.PlayerManager;
 import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.stat.StatManager;
@@ -26,7 +27,7 @@ public class BlockBreak implements Listener {
                 player.getStats(stat).addEntry(
                         new StatTimeEntry(System.currentTimeMillis(), 1, metadata)
                 );
-            })
+            }), Util::handleError
         );
     }
 

@@ -1,16 +1,18 @@
 package nl.lolmewn.stats.player;
 
-import io.reactivex.Flowable;
 import io.reactivex.Observable;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.subjects.PublishSubject;
 import nl.lolmewn.stats.storage.StorageManager;
-import org.reactivestreams.Subscriber;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
-public class PlayerManager extends Flowable<StatsPlayer> {
+public class PlayerManager {
 
-    private Set<Subscriber<? super StatsPlayer>> subscribers = new HashSet<>();
-
+    private final PublishSubject<StatsPlayer> publishSubject = PublishSubject.create();
     private static PlayerManager instance;
     private Map<UUID, StatsPlayer> players = new HashMap<>();
     private Map<UUID, Observable<StatsPlayer>> loadingPlayers = new HashMap<>();
@@ -29,11 +31,12 @@ public class PlayerManager extends Flowable<StatsPlayer> {
         if (this.loadingPlayers.containsKey(uuid)) {
             return this.loadingPlayers.get(uuid);
         }
-        Observable<StatsPlayer> observable = Observable.fromCallable(StorageManager.getInstance().loadPlayer(uuid))
-                .map(statsPlayer -> {
-                    this.addPlayer(statsPlayer);
-                    return statsPlayer;
-                });
+        Observable<StatsPlayer> observable = Observable.create(emitter -> {
+            StatsPlayer player = StorageManager.getInstance().loadPlayer(uuid).call();
+            this.addPlayer(player);
+            emitter.onNext(player);
+            emitter.onComplete();
+        });
         this.loadingPlayers.put(uuid, observable);
         return observable;
     }
@@ -41,15 +44,14 @@ public class PlayerManager extends Flowable<StatsPlayer> {
     public void addPlayer(StatsPlayer player) {
         this.players.put(player.getUuid(), player);
         this.loadingPlayers.remove(player.getUuid());
-        this.subscribers.forEach(sub -> sub.onNext(player));
+        this.publishSubject.onNext(player);
     }
 
     public void removePlayer(StatsPlayer player) {
         this.players.remove(player.getUuid());
     }
 
-    @Override
-    protected void subscribeActual(Subscriber<? super StatsPlayer> subscriber) {
-        this.subscribers.add(subscriber);
+    public Disposable subscribe(Consumer<StatsPlayer> playerConsumer, Consumer<? super Throwable> handleError) {
+        return this.publishSubject.subscribe(playerConsumer, handleError);
     }
 }

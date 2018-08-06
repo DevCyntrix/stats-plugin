@@ -7,6 +7,7 @@ import com.rabbitmq.client.ConnectionFactory;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Consumer;
 import nl.lolmewn.stats.SharedMain;
+import nl.lolmewn.stats.Util;
 import nl.lolmewn.stats.player.PlayerManager;
 import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.player.StatsContainer;
@@ -28,7 +29,7 @@ public class GlobalStats {
     public GlobalStats() {
         try {
             setupRabbitMq();
-            this.disposable.add(PlayerManager.getInstance().subscribe(this.getPlayerConsumer()));
+            this.disposable.add(PlayerManager.getInstance().subscribe(this.getPlayerConsumer(), Util::handleError));
         } catch (IOException | TimeoutException e) {
             e.printStackTrace();
         }
@@ -37,14 +38,14 @@ public class GlobalStats {
     private Consumer<StatsPlayer> getPlayerConsumer() {
         return player -> {
             player.getContainers().forEach(cont -> // Listen to updates of already-in-place containers
-                    this.disposable.add(cont.subscribe(this.getStatTimeEntryConsumer(player, cont))));
-            this.disposable.add(player.subscribe(this.getContainerConsumer(player))); // Listen to new containers
+                    this.disposable.add(cont.subscribe(this.getStatTimeEntryConsumer(player, cont), Util::handleError)));
+            this.disposable.add(player.subscribe(this.getContainerConsumer(player), Util::handleError)); // Listen to new containers
         };
     }
 
     private Consumer<StatsContainer> getContainerConsumer(StatsPlayer player) {
         return statsContainer ->
-                this.disposable.add(statsContainer.subscribe(this.getStatTimeEntryConsumer(player, statsContainer)));
+                this.disposable.add(statsContainer.subscribe(this.getStatTimeEntryConsumer(player, statsContainer), Util::handleError));
     }
 
     private Consumer<StatTimeEntry> getStatTimeEntryConsumer(StatsPlayer player, StatsContainer statsContainer) {

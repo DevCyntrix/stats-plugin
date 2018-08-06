@@ -1,17 +1,16 @@
 package nl.lolmewn.stats.player;
 
-import io.reactivex.Flowable;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.subjects.PublishSubject;
 import nl.lolmewn.stats.stat.Stat;
-import org.reactivestreams.Subscriber;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-public class StatsContainer extends Flowable<StatTimeEntry> {
+public class StatsContainer {
 
-    private final Set<Subscriber<? super StatTimeEntry>> subscribers = new HashSet<Subscriber<? super StatTimeEntry>>();
+    private final PublishSubject<StatTimeEntry> publishSubject = PublishSubject.create();
 
     private final Stat stat;
     private final List<StatTimeEntry> entries = new ArrayList<>();
@@ -26,7 +25,7 @@ public class StatsContainer extends Flowable<StatTimeEntry> {
     public void addEntry(StatTimeEntry entry) {
         this.entries.add(entry);
         this.total += entry.getAmount();
-        this.subscribers.forEach(sub -> sub.onNext(entry));
+        this.publishSubject.onNext(entry);
     }
 
     public SimpleStatContainer getSimpleStatContainer() {
@@ -45,8 +44,7 @@ public class StatsContainer extends Flowable<StatTimeEntry> {
         return total;
     }
 
-    @Override
-    protected void subscribeActual(Subscriber<? super StatTimeEntry> subscriber) {
-        this.subscribers.add(subscriber);
+    public Disposable subscribe(Consumer<StatTimeEntry> timeEntryConsumer, Consumer<? super Throwable> handleError) {
+        return this.publishSubject.subscribe(timeEntryConsumer, handleError);
     }
 }

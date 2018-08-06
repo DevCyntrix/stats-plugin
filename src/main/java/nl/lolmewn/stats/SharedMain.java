@@ -2,6 +2,8 @@ package nl.lolmewn.stats;
 
 import nl.lolmewn.stats.stat.StatManager;
 import nl.lolmewn.stats.stat.impl.BlockBreakStat;
+import nl.lolmewn.stats.stat.impl.DeathStat;
+import nl.lolmewn.stats.stat.impl.KillStat;
 import nl.lolmewn.stats.stat.impl.PlaytimeStat;
 
 public class SharedMain {
@@ -16,6 +18,8 @@ public class SharedMain {
     public static void registerStats() {
         StatManager.getInstance().addStat(new PlaytimeStat());
         StatManager.getInstance().addStat(new BlockBreakStat());
+        StatManager.getInstance().addStat(new DeathStat());
+        StatManager.getInstance().addStat(new KillStat());
     }
 
     public static void setDebug(boolean state) {

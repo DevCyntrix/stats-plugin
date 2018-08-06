@@ -1,6 +1,7 @@
 package nl.lolmewn.stats.player;
 
 import io.reactivex.disposables.Disposable;
+import nl.lolmewn.stats.Util;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +16,7 @@ public class SimpleStatContainer {
 
     public SimpleStatContainer(StatsContainer parent) {
         this.parent = parent;
-        this.subscription = parent.subscribe(this::handleUpdate);
+        this.subscription = parent.subscribe(this::handleUpdate, Util::handleError);
     }
 
     private void handleUpdate(StatTimeEntry entry) {

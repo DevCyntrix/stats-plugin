@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Consumer;
+import nl.lolmewn.stats.Util;
 import nl.lolmewn.stats.player.PlayerManager;
 import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.player.StatsContainer;
@@ -11,10 +12,7 @@ import nl.lolmewn.stats.player.StatsPlayer;
 import nl.lolmewn.stats.stat.Stat;
 import nl.lolmewn.stats.stat.StatManager;
 import nl.lolmewn.stats.storage.StorageManager;
-import nl.lolmewn.stats.storage.mysql.impl.BlockBreakStorage;
-import nl.lolmewn.stats.storage.mysql.impl.DeathStorage;
-import nl.lolmewn.stats.storage.mysql.impl.GeneralPlayerStorage;
-import nl.lolmewn.stats.storage.mysql.impl.PlaytimeStorage;
+import nl.lolmewn.stats.storage.mysql.impl.*;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -44,20 +42,21 @@ public class MySQLStorage extends StorageManager {
         this.registerHandlers();
         this.generateTables();
         System.out.println("MySQL ready to go!");
-        this.disposable.add(PlayerManager.getInstance().subscribe(this.getPlayerConsumer()));
+        this.disposable.add(PlayerManager.getInstance().subscribe(this.getPlayerConsumer(), Util::handleError));
     }
 
     private Consumer<StatsPlayer> getPlayerConsumer() {
         return player -> {
+            System.out.println("New player triggered: " + player.getUuid().toString());
             player.getContainers().forEach(cont -> // Listen to updates of already-in-place containers
-                    this.disposable.add(cont.subscribe(this.getStatTimeEntryConsumer(player, cont))));
-            this.disposable.add(player.subscribe(this.getContainerConsumer(player))); // Listen to new containers
+                    this.disposable.add(cont.subscribe(this.getStatTimeEntryConsumer(player, cont), Util::handleError)));
+            this.disposable.add(player.subscribe(this.getContainerConsumer(player), Util::handleError)); // Listen to new containers
         };
     }
 
     private Consumer<StatsContainer> getContainerConsumer(StatsPlayer player) {
         return statsContainer ->
-                this.disposable.add(statsContainer.subscribe(this.getStatTimeEntryConsumer(player, statsContainer)));
+                this.disposable.add(statsContainer.subscribe(this.getStatTimeEntryConsumer(player, statsContainer), Util::handleError));
     }
 
     private Consumer<StatTimeEntry> getStatTimeEntryConsumer(StatsPlayer player, StatsContainer statsContainer) {
@@ -75,6 +74,7 @@ public class MySQLStorage extends StorageManager {
         StatManager.getInstance().getStat("Playtime").ifPresent(stat -> this.handlers.put(stat, new PlaytimeStorage()));
         StatManager.getInstance().getStat("Blocks broken").ifPresent(stat -> this.handlers.put(stat, new BlockBreakStorage()));
         StatManager.getInstance().getStat("Deaths").ifPresent(stat -> this.handlers.put(stat, new DeathStorage()));
+        StatManager.getInstance().getStat("Kills").ifPresent(stat -> this.handlers.put(stat, new KillStorage()));
 
         // Register all other stats to the default
         StatManager.getInstance().getStats().stream()

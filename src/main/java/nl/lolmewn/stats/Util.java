@@ -29,4 +29,9 @@ public class Util {
         }
         return Optional.empty();
     }
+
+    public static void handleError(Throwable throwable) {
+        System.err.println("Error occurred, see stacktrace below");
+        throwable.printStackTrace(System.err);
+    }
 }
