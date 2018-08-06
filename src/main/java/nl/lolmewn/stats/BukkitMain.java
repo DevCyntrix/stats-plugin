@@ -1,6 +1,10 @@
 package nl.lolmewn.stats;
 
 import hu.akarnokd.rxjava2.debug.validator.RxJavaProtocolValidator;
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import nl.lolmewn.stats.global.GlobalStats;
 import nl.lolmewn.stats.listener.Playtime;
 import nl.lolmewn.stats.listener.bukkit.BlockBreak;
@@ -8,16 +12,19 @@ import nl.lolmewn.stats.listener.bukkit.EntityDeath;
 import nl.lolmewn.stats.listener.bukkit.PlayerDeath;
 import nl.lolmewn.stats.listener.bukkit.PlayerJoin;
 import nl.lolmewn.stats.player.PlayerManager;
+import nl.lolmewn.stats.player.SimpleStatContainer;
+import nl.lolmewn.stats.player.StatsPlayer;
 import nl.lolmewn.stats.stat.StatManager;
 import nl.lolmewn.stats.storage.mysql.MySQLConfig;
 import nl.lolmewn.stats.storage.mysql.MySQLStorage;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.SQLException;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 
 public class BukkitMain extends JavaPlugin {
@@ -74,16 +81,37 @@ public class BukkitMain extends JavaPlugin {
             return true;
         }
         sender.sendMessage(ChatColor.RED + "Your total stats");
-        StatManager.getInstance().getStats().forEach(stat ->
-                PlayerManager.getInstance().getPlayer(((Player) sender).getUniqueId()).subscribe(player ->
-                                sender.sendMessage(
-                                        ChatColor.DARK_GREEN + stat.getName() +
-                                                ChatColor.RED + ": " +
-                                                ChatColor.GOLD + player.getStats(stat).getTotal()),
-                        err -> {
-                            sender.sendMessage(ChatColor.RED + "An Unknown error occurred!");
-                            System.out.println("Command error: " + err);
-                        }));
+        PlayerManager.getInstance().getPlayer(((Player) sender).getUniqueId()).subscribe(player ->
+                sendStatistics(sender, player), err -> {
+            sender.sendMessage(ChatColor.RED + "An Unknown error occurred!");
+            System.out.println("Command error: " + err);
+        });
         return true;
+    }
+
+    private void sendStatistics(CommandSender sender, StatsPlayer player) {
+        StatManager.getInstance().getStats().forEach(stat -> {
+            TextComponent statMessage = new TextComponent(stat.getName());
+            statMessage.setColor(ChatColor.DARK_GREEN);
+            TextComponent colon = new TextComponent(": ");
+            colon.setColor(ChatColor.RED);
+            TextComponent statValue = new TextComponent("" + player.getStats(stat).getTotal());
+            statValue.setColor(ChatColor.GOLD);
+            statValue.setHoverEvent(new HoverEvent(
+                    HoverEvent.Action.SHOW_TEXT,
+                    new ComponentBuilder(getValuesFor("world", player.getStats(stat).getSimpleStatContainer()).entrySet().stream().map(
+                            entry -> "In " + getServer().getWorld(UUID.fromString(entry.getKey())).getName() + ": " + entry.getValue()
+                    ).reduce("", (s, s2) -> s + "\n" + s2)).create()
+            ));
+            sender.spigot().sendMessage(statMessage, colon, statValue);
+        });
+    }
+
+    public Map<String, Long> getValuesFor(String metadataKey, SimpleStatContainer statContainer) {
+        Map<String, Long> results = new TreeMap<>();
+        statContainer.getValues().entrySet().stream()
+                .filter(e -> e.getKey().containsKey(metadataKey))
+                .forEach(e -> results.merge(e.getKey().get(metadataKey).toString(), e.getValue(), Long::sum));
+        return results;
     }
 }

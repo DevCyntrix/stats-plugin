@@ -30,6 +30,12 @@ public class SimpleStatContainer {
         return values;
     }
 
+    public Map<Map<String, Object>, Long> getValuesWhere(String key, Object value) {
+        return this.getValues().entrySet().stream()
+                .filter(entry -> entry.getKey().containsKey(key) && entry.getKey().get(key).equals(value))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
     public void shutdown() {
         this.subscription.dispose();
     }
