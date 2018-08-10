@@ -22,7 +22,7 @@ public class BlockPlace implements Listener {
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
         PlayerManager.getInstance().getPlayer(event.getPlayer().getUniqueId()).subscribe(player ->
-                StatManager.getInstance().getStat("Blocks broken").ifPresent(stat -> {
+                StatManager.getInstance().getStat("Blocks placed").ifPresent(stat -> {
                     Map<String, Object> metadata = generateMetadata(event);
                     player.getStats(stat).addEntry(
                             new StatTimeEntry(System.currentTimeMillis(), 1, metadata)
