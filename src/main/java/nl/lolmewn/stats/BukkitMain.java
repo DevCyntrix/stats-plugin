@@ -7,10 +7,7 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import nl.lolmewn.stats.global.GlobalStats;
 import nl.lolmewn.stats.listener.Playtime;
-import nl.lolmewn.stats.listener.bukkit.BlockBreak;
-import nl.lolmewn.stats.listener.bukkit.EntityDeath;
-import nl.lolmewn.stats.listener.bukkit.PlayerDeath;
-import nl.lolmewn.stats.listener.bukkit.PlayerJoin;
+import nl.lolmewn.stats.listener.bukkit.*;
 import nl.lolmewn.stats.player.PlayerManager;
 import nl.lolmewn.stats.player.SimpleStatContainer;
 import nl.lolmewn.stats.player.StatsPlayer;
@@ -39,6 +36,14 @@ public class BukkitMain extends JavaPlugin {
         super.getConfig().options().copyDefaults(true);
         super.saveConfig();
 
+        if (super.getConfig().getString("mysql.username", "username").equals("username")) {
+            getLogger().info("Stats is not yet configured");
+            getLogger().info("Stats has generated a config.yml");
+            getLogger().info("Please configure Stats and then restart your server");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+
         SharedMain.registerStats();
 
         try {
@@ -51,6 +56,7 @@ public class BukkitMain extends JavaPlugin {
 
         new PlayerJoin(this);
         new BlockBreak(this);
+        new BlockPlace(this);
         new PlayerDeath(this);
         new EntityDeath(this);
         new Playtime();
@@ -71,7 +77,7 @@ public class BukkitMain extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        this.globalStats.shutdown();
+        if (this.globalStats != null) this.globalStats.shutdown();
     }
 
     @Override
@@ -101,7 +107,7 @@ public class BukkitMain extends JavaPlugin {
                     HoverEvent.Action.SHOW_TEXT,
                     new ComponentBuilder(getValuesFor("world", player.getStats(stat).getSimpleStatContainer()).entrySet().stream().map(
                             entry -> "In " + getServer().getWorld(UUID.fromString(entry.getKey())).getName() + ": " + entry.getValue()
-                    ).reduce("", (s, s2) -> s + "\n" + s2)).create()
+                    ).reduce((s, s2) -> s + "\n" + s2).orElse("No data recorded yet!")).create()
             ));
             sender.spigot().sendMessage(statMessage, colon, statValue);
         });
