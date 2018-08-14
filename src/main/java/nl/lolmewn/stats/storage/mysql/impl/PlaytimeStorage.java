@@ -39,7 +39,7 @@ public class PlaytimeStorage implements StatMySQLHandler {
                     throw new IllegalStateException("Found world UUID that is not a UUID: " + set.getString("world_uuid"));
                 }
                 entries.add(new StatTimeEntry(
-                        set.getTimestamp("last_updated").getTime(), set.getLong("amount"),
+                        set.getTimestamp("last_updated").getTime(), set.getDouble("amount"),
                         Map.of("world", worldUUID.get()
                         )));
             }
@@ -51,7 +51,7 @@ public class PlaytimeStorage implements StatMySQLHandler {
     public void storeEntry(Connection con, StatsPlayer player, StatsContainer container, StatTimeEntry entry) throws SQLException {
         try (PreparedStatement update = con.prepareStatement("UPDATE stats_playtime SET amount=amount+? " +
                 "WHERE player=UNHEX(?) AND world=UNHEX(?)")) {
-            update.setLong(1, entry.getAmount());
+            update.setLong(1, (long) entry.getAmount());
             update.setString(2, player.getUuid().toString().replace("-", ""));
             update.setString(3, entry.getMetadata().get("world").toString().replace("-", ""));
             if (update.executeUpdate() == 0) {
@@ -59,7 +59,7 @@ public class PlaytimeStorage implements StatMySQLHandler {
                         "VALUES (UNHEX(?), UNHEX(?), ?) ON DUPLICATE KEY UPDATE amount=amount+VALUES(amount)")) {
                     st.setString(1, player.getUuid().toString().replace("-", ""));
                     st.setString(2, entry.getMetadata().get("world").toString().replace("-", ""));
-                    st.setLong(3, entry.getAmount());
+                    st.setLong(3, (long) entry.getAmount());
                     st.execute();
                 }
             }

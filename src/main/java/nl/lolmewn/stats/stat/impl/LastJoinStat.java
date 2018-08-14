@@ -6,10 +6,10 @@ import nl.lolmewn.stats.stat.Stat;
 import java.util.Collection;
 import java.util.List;
 
-public class LastJoin extends Stat {
+public class LastJoinStat extends Stat {
 
-    public LastJoin() {
-        super("Name", "Description");
+    public LastJoinStat() {
+        super("Last join", "When this player joined last");
     }
 
     @Override

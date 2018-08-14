@@ -6,6 +6,7 @@ import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.stat.StatManager;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.plugin.Plugin;
@@ -18,15 +19,14 @@ public class PlayerDeath implements Listener {
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onDeath(PlayerDeathEvent event) {
         PlayerManager.getInstance().getPlayer(event.getEntity().getUniqueId()).subscribe(player ->
                 StatManager.getInstance().getStat("Deaths").ifPresent(stat ->
                         player.getStats(stat).addEntry(
                                 new StatTimeEntry(System.currentTimeMillis(), 1, generateMetadata(event))
                         )
-                )
-                , Util::handleError);
+                ), Util::handleError);
     }
 
     private Map<String, Object> generateMetadata(PlayerDeathEvent event) {

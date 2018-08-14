@@ -6,10 +6,10 @@ import nl.lolmewn.stats.stat.Stat;
 import java.util.Collection;
 import java.util.List;
 
-public class LastQuitStat extends Stat {
+public class XpGainedStat extends Stat {
 
-    public LastQuitStat() {
-        super("Last quit", "When this player quit last");
+    public XpGainedStat() {
+        super("XP gained", "Amount of XP gained");
     }
 
     @Override

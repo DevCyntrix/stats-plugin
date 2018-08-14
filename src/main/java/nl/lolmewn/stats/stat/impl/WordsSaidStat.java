@@ -6,10 +6,10 @@ import nl.lolmewn.stats.stat.Stat;
 import java.util.Collection;
 import java.util.List;
 
-public class BedsEntered extends Stat {
+public class WordsSaidStat extends Stat {
 
-    public BedsEntered() {
-        super("Beds entered", "Amount of times entered a bed");
+    public WordsSaidStat() {
+        super("Words said", "Amount of words said");
     }
 
     @Override

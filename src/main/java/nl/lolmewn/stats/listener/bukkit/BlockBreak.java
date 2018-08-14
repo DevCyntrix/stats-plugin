@@ -6,6 +6,7 @@ import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.stat.StatManager;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.plugin.Plugin;
@@ -19,7 +20,7 @@ public class BlockBreak implements Listener {
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
         PlayerManager.getInstance().getPlayer(event.getPlayer().getUniqueId()).subscribe(player ->
             StatManager.getInstance().getStat("Blocks broken").ifPresent(stat -> {

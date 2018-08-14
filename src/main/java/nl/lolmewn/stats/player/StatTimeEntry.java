@@ -6,15 +6,15 @@ import java.util.Map;
 public class StatTimeEntry {
 
     private final long timestamp;
-    private final long amount;
+    private final double amount;
     private final Map<String, Object> metadata = new HashMap<>();
 
-    public StatTimeEntry(long timestamp, long amount) {
+    public StatTimeEntry(long timestamp, double amount) {
         this.timestamp = timestamp;
         this.amount = amount;
     }
 
-    public StatTimeEntry(long timestamp, long amount, Map<String, Object> metadata) {
+    public StatTimeEntry(long timestamp, double amount, Map<String, Object> metadata) {
         this.timestamp = timestamp;
         this.amount = amount;
         this.metadata.putAll(metadata);
@@ -24,7 +24,7 @@ public class StatTimeEntry {
         return timestamp;
     }
 
-    public long getAmount() {
+    public double getAmount() {
         return amount;
     }
 

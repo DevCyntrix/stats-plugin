@@ -14,7 +14,7 @@ public class StatsContainer {
 
     private final Stat stat;
     private final List<StatTimeEntry> entries = new ArrayList<>();
-    private long total;
+    private double total;
     private final SimpleStatContainer simpleStatContainer;
 
     public StatsContainer(Stat stat) {
@@ -40,7 +40,7 @@ public class StatsContainer {
         return stat;
     }
 
-    public long getTotal() {
+    public double getTotal() {
         return total;
     }
 

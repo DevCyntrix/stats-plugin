@@ -6,15 +6,14 @@ import nl.lolmewn.stats.stat.Stat;
 import java.util.Collection;
 import java.util.List;
 
-public class ItemsPickedUp extends Stat {
+public class BedsEnteredStat extends Stat {
 
-    public ItemsPickedUp() {
-        super("Name", "Description");
+    public BedsEnteredStat() {
+        super("Beds entered", "Amount of times entered a bed");
     }
 
     @Override
     public Collection<StatMetaData> getMetaData() {
-        return List.of(new StatMetaData("world", String.class, true),
-                new StatMetaData("type", String.class, true));
+        return List.of(new StatMetaData("world", String.class, true));
     }
 }

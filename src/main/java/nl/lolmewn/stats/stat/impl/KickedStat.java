@@ -6,10 +6,9 @@ import nl.lolmewn.stats.stat.Stat;
 import java.util.Collection;
 import java.util.List;
 
-public class EggsThrown extends Stat {
-
-    public EggsThrown() {
-        super("Name", "Description");
+public class KickedStat extends Stat {
+    public KickedStat() {
+        super("Times kicked", "Amount of times kicked from the server");
     }
 
     @Override

@@ -6,10 +6,10 @@ import nl.lolmewn.stats.stat.Stat;
 import java.util.Collection;
 import java.util.List;
 
-public class BucketsEmptied extends Stat {
+public class ShearStat extends Stat {
 
-    public BucketsEmptied() {
-        super("Name", "Description");
+    public ShearStat() {
+        super("Times sheared", "Amount of entities sheared");
     }
 
     @Override

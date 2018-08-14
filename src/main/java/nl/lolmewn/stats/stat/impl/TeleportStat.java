@@ -6,10 +6,10 @@ import nl.lolmewn.stats.stat.Stat;
 import java.util.Collection;
 import java.util.List;
 
-public class TimesJoined extends Stat {
+public class TeleportStat extends Stat {
 
-    public TimesJoined() {
-        super("Times joined", "Amount of times joined the server");
+    public TeleportStat() {
+        super("Teleports", "Amount of times teleported");
     }
 
     @Override

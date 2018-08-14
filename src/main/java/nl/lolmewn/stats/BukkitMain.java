@@ -54,12 +54,12 @@ public class BukkitMain extends JavaPlugin {
             return;
         }
 
-        new PlayerJoin(this);
         new BlockBreak(this);
         new BlockPlace(this);
         new PlayerDeath(this);
         new EntityDeath(this);
         new Playtime();
+        new SimpleStatsListener(this);
 
         SharedMain.serverUuid = super.getConfig().getString("server-id");
         SharedMain.setDebug(super.getConfig().getBoolean("debug", false));
@@ -113,11 +113,11 @@ public class BukkitMain extends JavaPlugin {
         });
     }
 
-    public Map<String, Long> getValuesFor(String metadataKey, SimpleStatContainer statContainer) {
-        Map<String, Long> results = new TreeMap<>();
+    public Map<String, Double> getValuesFor(String metadataKey, SimpleStatContainer statContainer) {
+        Map<String, Double> results = new TreeMap<>();
         statContainer.getValues().entrySet().stream()
                 .filter(e -> e.getKey().containsKey(metadataKey))
-                .forEach(e -> results.merge(e.getKey().get(metadataKey).toString(), e.getValue(), Long::sum));
+                .forEach(e -> results.merge(e.getKey().get(metadataKey).toString(), e.getValue(), Double::sum));
         return results;
     }
 }

@@ -50,7 +50,7 @@ public class GlobalStats {
 
     private Consumer<StatTimeEntry> getStatTimeEntryConsumer(StatsPlayer player, StatsContainer statsContainer) {
         return statTimeEntry -> {
-            SharedMain.debug(String.format("%s updated %s with %d to %d at %d",
+            SharedMain.debug(String.format("%s updated %s with %f to %f at %d",
                     player.getUuid().toString(), statsContainer.getStat().getName(),
                     statTimeEntry.getAmount(), statsContainer.getTotal(), statTimeEntry.getTimestamp()));
             String message = this.gson.toJson(Map.of(

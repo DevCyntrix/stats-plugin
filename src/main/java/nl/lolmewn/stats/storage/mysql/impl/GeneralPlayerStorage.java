@@ -30,7 +30,7 @@ public class GeneralPlayerStorage implements StatMySQLHandler {
                     "  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT," +
                     "  `player` BINARY(16) NOT NULL," +
                     "  `world` BINARY(16) NOT NULL," +
-                    "  `amount` BIGINT NOT NULL," +
+                    "  `amount` DOUBLE NOT NULL," +
                     "  `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," +
                     "  PRIMARY KEY (`id`)," +
                     "  UNIQUE INDEX `id_UNIQUE` (`id` ASC)," +
@@ -51,7 +51,7 @@ public class GeneralPlayerStorage implements StatMySQLHandler {
                     throw new IllegalStateException("Found world UUID that is not a UUID: " + set.getString("world_uuid"));
                 }
                 entries.add(new StatTimeEntry(
-                        set.getTimestamp("timestamp").getTime(), set.getLong("amount"),
+                        set.getTimestamp("timestamp").getTime(), set.getDouble("amount"),
                         Map.of("world", worldUUID.get()
                         )));
             }
@@ -65,7 +65,7 @@ public class GeneralPlayerStorage implements StatMySQLHandler {
                 "VALUES (UNHEX(?), UNHEX(?), ?, ?)")) {
             st.setString(1, player.getUuid().toString().replace("-", ""));
             st.setString(2, entry.getMetadata().get("world").toString().replace("-", ""));
-            st.setLong(3, entry.getAmount());
+            st.setDouble(3, entry.getAmount());
             st.setTimestamp(4, new Timestamp(entry.getTimestamp()));
             st.execute();
         }

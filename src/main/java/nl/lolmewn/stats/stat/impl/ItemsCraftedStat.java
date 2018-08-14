@@ -6,10 +6,10 @@ import nl.lolmewn.stats.stat.Stat;
 import java.util.Collection;
 import java.util.List;
 
-public class ItemsDropped extends Stat {
+public class ItemsCraftedStat extends Stat {
 
-    public ItemsDropped() {
-        super("Name", "Description");
+    public ItemsCraftedStat() {
+        super("Items crafted", "Amount of items crafted");
     }
 
     @Override
