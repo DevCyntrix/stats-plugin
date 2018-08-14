@@ -77,7 +77,7 @@ public class SimpleStatsListener implements Listener {
         if (!(event.getEntity() instanceof Player)) {
             return;
         }
-        this.addEntry(event.getEntity().getUniqueId(), "Buckets emptied",
+        this.addEntry(event.getEntity().getUniqueId(), "Damage taken",
                 new StatTimeEntry(System.currentTimeMillis(), Math.round(event.getFinalDamage()),
                         Map.of("world", event.getEntity().getWorld().getUID().toString(),
                                 "cause", event.getCause().toString())));
