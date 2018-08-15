@@ -4,8 +4,10 @@ import com.google.gson.Gson;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import io.reactivex.Flowable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 import nl.lolmewn.stats.SharedMain;
 import nl.lolmewn.stats.Util;
 import nl.lolmewn.stats.player.PlayerManager;
@@ -49,10 +51,11 @@ public class GlobalStats {
     }
 
     private Consumer<StatTimeEntry> getStatTimeEntryConsumer(StatsPlayer player, StatsContainer statsContainer) {
-        return statTimeEntry -> {
-            SharedMain.debug(String.format("%s updated %s with %f to %f at %d",
+        return statTimeEntry -> this.disposable.add(Flowable.just(statTimeEntry).subscribeOn(Schedulers.io()).subscribe(entry -> {
+            SharedMain.debug(String.format("%s updated %s with %f to %f at %d in thread %s",
                     player.getUuid().toString(), statsContainer.getStat().getName(),
-                    statTimeEntry.getAmount(), statsContainer.getTotal(), statTimeEntry.getTimestamp()));
+                    statTimeEntry.getAmount(), statsContainer.getTotal(), statTimeEntry.getTimestamp(),
+                    Thread.currentThread().getName()));
             String message = this.gson.toJson(Map.of(
                     "serverUuid", SharedMain.getServerUuid(),
                     "content", Map.of(
@@ -65,7 +68,7 @@ public class GlobalStats {
             ));
             SharedMain.debug("Publishing " + message);
             this.channel.basicPublish("", routingKey, null, message.getBytes());
-        };
+        }));
     }
 
     private void setupRabbitMq() throws IOException, TimeoutException {

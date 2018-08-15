@@ -2,8 +2,10 @@ package nl.lolmewn.stats.storage.mysql;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import io.reactivex.Flowable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 import nl.lolmewn.stats.Util;
 import nl.lolmewn.stats.player.PlayerManager;
 import nl.lolmewn.stats.player.StatTimeEntry;
@@ -56,11 +58,15 @@ public class MySQLStorage extends StorageManager {
 
     private Consumer<StatsContainer> getContainerConsumer(StatsPlayer player) {
         return statsContainer ->
-                this.disposable.add(statsContainer.subscribe(this.getStatTimeEntryConsumer(player, statsContainer), Util::handleError));
+                this.disposable.add(statsContainer.getPublishSubject().subscribe(
+                        this.getStatTimeEntryConsumer(player, statsContainer), Util::handleError)
+                );
     }
 
     private Consumer<StatTimeEntry> getStatTimeEntryConsumer(StatsPlayer player, StatsContainer statsContainer) {
-        return statTimeEntry -> this.storeEntry(player, statsContainer, statTimeEntry);
+        return statTimeEntry -> this.disposable.add(Flowable.just(statTimeEntry).subscribeOn(Schedulers.io())
+                .subscribe((entry) -> this.storeEntry(player, statsContainer, entry), Util::handleError));
+//        return statTimeEntry -> this.storeEntry(player, statsContainer, statTimeEntry);
     }
     private void generateTables() throws SQLException {
         try (Connection con = getConnection()) {

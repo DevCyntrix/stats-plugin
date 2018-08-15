@@ -47,4 +47,8 @@ public class StatsContainer {
     public Disposable subscribe(Consumer<StatTimeEntry> timeEntryConsumer, Consumer<? super Throwable> handleError) {
         return this.publishSubject.subscribe(timeEntryConsumer, handleError);
     }
+
+    public PublishSubject<StatTimeEntry> getPublishSubject() {
+        return publishSubject;
+    }
 }
