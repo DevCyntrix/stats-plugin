@@ -17,4 +17,9 @@ public class DamageTakenStat extends Stat {
         return List.of(new StatMetaData("world", String.class, true),
                 new StatMetaData("cause", String.class, true));
     }
+
+    @Override
+    public String format(double value) {
+        return String.format("%1$,.1f hearts", value / 2);
+    }
 }

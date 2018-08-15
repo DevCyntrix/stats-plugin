@@ -14,6 +14,10 @@ public abstract class Stat {
         this.description = description;
     }
 
+    public String format(double value) {
+        return String.format("%1$,.2f", value);
+    }
+
     public String getName() {
         return name;
     }

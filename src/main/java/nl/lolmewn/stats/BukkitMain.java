@@ -102,9 +102,11 @@ public class BukkitMain extends JavaPlugin {
         StatManager.getInstance().getStats().forEach(stat -> {
             TextComponent statMessage = new TextComponent(stat.getName());
             statMessage.setColor(ChatColor.DARK_GREEN);
+            statMessage.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                    new ComponentBuilder(stat.getDescription()).color(ChatColor.GOLD).create()));
             TextComponent colon = new TextComponent(": ");
             colon.setColor(ChatColor.RED);
-            TextComponent statValue = new TextComponent("" + player.getStats(stat).getTotal());
+            TextComponent statValue = new TextComponent(stat.format(player.getStats(stat).getTotal()));
             statValue.setColor(ChatColor.GOLD);
             statValue.setHoverEvent(new HoverEvent(
                     HoverEvent.Action.SHOW_TEXT,
