@@ -81,7 +81,7 @@ public class SimpleStatsListener implements Listener {
         this.addEntry(event.getEntity().getUniqueId(), "Damage taken",
                 new StatTimeEntry(System.currentTimeMillis(), Math.round(event.getFinalDamage()),
                         Map.of("world", event.getEntity().getWorld().getUID().toString(),
-                                "cause", event.getCause().toString())));
+                                "type", event.getCause().toString())));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
