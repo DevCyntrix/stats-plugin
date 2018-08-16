@@ -11,11 +11,11 @@ import java.sql.*;
 import java.util.*;
 
 @SuppressWarnings("SqlResolve")
-public class GeneralPlayerStorage implements StatMySQLHandler {
+public class GeneralStatStorage implements StatMySQLHandler {
 
     private final Stat stat;
 
-    public GeneralPlayerStorage(Stat stat) {
+    public GeneralStatStorage(Stat stat) {
         this.stat = stat;
     }
 
@@ -52,7 +52,7 @@ public class GeneralPlayerStorage implements StatMySQLHandler {
                 }
                 entries.add(new StatTimeEntry(
                         set.getTimestamp("timestamp").getTime(), set.getDouble("amount"),
-                        Map.of("world", worldUUID.get()
+                        Map.of("world", worldUUID.get().toString()
                         )));
             }
         }

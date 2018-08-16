@@ -111,7 +111,7 @@ public class BukkitMain extends JavaPlugin {
             statValue.setHoverEvent(new HoverEvent(
                     HoverEvent.Action.SHOW_TEXT,
                     new ComponentBuilder(getValuesFor("world", player.getStats(stat).getSimpleStatContainer()).entrySet().stream().map(
-                            entry -> "In " + getServer().getWorld(UUID.fromString(entry.getKey())).getName() + ": " + entry.getValue()
+                            entry -> "In " + getServer().getWorld(UUID.fromString(entry.getKey())).getName() + ": " + stat.format(entry.getValue())
                     ).reduce((s, s2) -> s + "\n" + s2).orElse("No data recorded yet!")).create()
             ));
             sender.spigot().sendMessage(statMessage, colon, statValue);

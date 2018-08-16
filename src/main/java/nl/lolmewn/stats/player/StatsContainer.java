@@ -51,4 +51,16 @@ public class StatsContainer {
     public PublishSubject<StatTimeEntry> getPublishSubject() {
         return publishSubject;
     }
+
+    public void reset() {
+        this.entries.clear();
+        this.total = 0;
+        this.simpleStatContainer.reset();
+    }
+
+    public void resetWhere(String key, Object value) {
+        this.entries.removeIf(entry -> entry.getMetadata().containsKey(key) && entry.getMetadata().get(key).equals(value));
+        this.total = this.entries.stream().mapToDouble(StatTimeEntry::getAmount).sum();
+        this.simpleStatContainer.removeWhere(key, value);
+    }
 }

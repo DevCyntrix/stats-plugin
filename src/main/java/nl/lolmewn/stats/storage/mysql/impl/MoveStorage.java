@@ -9,28 +9,30 @@ import nl.lolmewn.stats.storage.mysql.StatMySQLHandler;
 import java.sql.*;
 import java.util.*;
 
-public class PlaytimeStorage implements StatMySQLHandler {
+@SuppressWarnings("SqlResolve")
+public class MoveStorage implements StatMySQLHandler {
 
     @Override
     public void generateTables(Connection con) throws SQLException {
         try (Statement st = con.createStatement()) {
-            st.execute("CREATE TABLE IF NOT EXISTS `stats_playtime` (" +
+            st.execute("CREATE TABLE IF NOT EXISTS `stats_move` (" +
                     "  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT," +
                     "  `player` BINARY(16) NOT NULL," +
                     "  `world` BINARY(16) NOT NULL," +
-                    "  `amount` BIGINT NOT NULL," +
-                    "  `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," +
+                    "  `amount` DOUBLE NOT NULL," +
+                    "  `type` TEXT NOT NULL," +
+                    "  `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," +
                     "  PRIMARY KEY (`id`)," +
                     "  UNIQUE INDEX `id_UNIQUE` (`id` ASC)," +
-                    "  UNIQUE INDEX `uuid_world` (`player` ASC, `world` ASC));");
+                    "  INDEX `uuid_world` (`player` ASC));");
         }
     }
 
     @Override
     public Collection<StatTimeEntry> loadEntries(Connection con, UUID uuid) throws SQLException {
         List<StatTimeEntry> entries = new ArrayList<>();
-        try (PreparedStatement st = con.prepareStatement("SELECT HEX(world) as world_uuid, amount, last_updated " +
-                "FROM stats_playtime WHERE player=UNHEX(?)")) {
+        try (PreparedStatement st = con.prepareStatement("SELECT *,HEX(world) as world_uuid, amount, timestamp " +
+                "FROM stats_move WHERE player=UNHEX(?)")) {
             st.setString(1, uuid.toString().replace("-", ""));
             ResultSet set = st.executeQuery();
             while (set != null && set.next()) {
@@ -38,10 +40,10 @@ public class PlaytimeStorage implements StatMySQLHandler {
                 if (!worldUUID.isPresent()) {
                     throw new IllegalStateException("Found world UUID that is not a UUID: " + set.getString("world_uuid"));
                 }
+                double amount = set.getDouble("amount");
                 entries.add(new StatTimeEntry(
-                        set.getTimestamp("last_updated").getTime(), set.getDouble("amount"),
-                        Map.of("world", worldUUID.get().toString()
-                        )));
+                        set.getTimestamp("timestamp").getTime(), amount,
+                        Map.of("world", worldUUID.get().toString(), "type", set.getString("type"))));
             }
         }
         return entries;
@@ -49,17 +51,19 @@ public class PlaytimeStorage implements StatMySQLHandler {
 
     @Override
     public void storeEntry(Connection con, StatsPlayer player, StatsContainer container, StatTimeEntry entry) throws SQLException {
-        try (PreparedStatement update = con.prepareStatement("UPDATE stats_playtime SET amount=amount+? " +
-                "WHERE player=UNHEX(?) AND world=UNHEX(?)")) {
+        try (PreparedStatement update = con.prepareStatement("UPDATE stats_move SET amount=amount+? " +
+                "WHERE player=UNHEX(?) AND world=UNHEX(?) AND type=?")) {
             update.setLong(1, (long) entry.getAmount());
             update.setString(2, player.getUuid().toString().replace("-", ""));
             update.setString(3, entry.getMetadata().get("world").toString().replace("-", ""));
+            update.setObject(4, entry.getMetadata().get("type"));
             if (update.executeUpdate() == 0) {
-                try (PreparedStatement st = con.prepareStatement("INSERT INTO stats_playtime (player, world, amount) " +
-                        "VALUES (UNHEX(?), UNHEX(?), ?) ON DUPLICATE KEY UPDATE amount=amount+VALUES(amount)")) {
+                try (PreparedStatement st = con.prepareStatement("INSERT INTO stats_move (player, world, amount, type) " +
+                        "VALUES (UNHEX(?), UNHEX(?), ?, ?) ON DUPLICATE KEY UPDATE amount=amount+VALUES(amount)")) {
                     st.setString(1, player.getUuid().toString().replace("-", ""));
                     st.setString(2, entry.getMetadata().get("world").toString().replace("-", ""));
-                    st.setLong(3, (long) entry.getAmount());
+                    st.setDouble(3, entry.getAmount());
+                    st.setObject(4, entry.getMetadata().get("type"));
                     st.execute();
                 }
             }

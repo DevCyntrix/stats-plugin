@@ -6,6 +6,7 @@ import nl.lolmewn.stats.player.PlayerManager;
 import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.stat.StatManager;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -63,7 +64,7 @@ public class SimpleStatsListener implements Listener {
         this.addEntry(event.getPlayer().getUniqueId(), "Buckets emptied",
                 new StatTimeEntry(System.currentTimeMillis(), 1,
                         Map.of("world", event.getPlayer().getWorld().getUID().toString(),
-                                "type", event.getBucket().getKey())));
+                                "type", event.getBucket().getKey().toString())));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -86,7 +87,9 @@ public class SimpleStatsListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     protected void onEggThrow(PlayerEggThrowEvent event) {
         this.addEntry(event.getPlayer().getUniqueId(), "Eggs thrown",
-                new StatTimeEntry(System.currentTimeMillis(), 1, getMetaData(event.getPlayer())));
+                new StatTimeEntry(System.currentTimeMillis(), 1,
+                        Map.of("world", event.getPlayer().getWorld().getUID().toString(),
+                                "type", event.getEgg().getType().toString())));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -94,10 +97,14 @@ public class SimpleStatsListener implements Listener {
         if (!event.getState().equals(PlayerFishEvent.State.CAUGHT_FISH)) {
             return;
         }
+        if (!(event.getCaught() instanceof Item)) {
+            return;
+        }
+        Item fish = (Item) event.getCaught();
         this.addEntry(event.getPlayer().getUniqueId(), "Fish caught",
                 new StatTimeEntry(System.currentTimeMillis(), 1,
                         Map.of("world", event.getPlayer().getWorld().getUID().toString(),
-                                "type", event.getCaught().getType().toString())));
+                                "type", fish.getItemStack().getType().getKey().toString())));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -105,7 +112,7 @@ public class SimpleStatsListener implements Listener {
         this.addEntry(event.getPlayer().getUniqueId(), "Food consumed",
                 new StatTimeEntry(System.currentTimeMillis(), 1,
                         Map.of("world", event.getPlayer().getWorld().getUID().toString(),
-                                "type", event.getItem().getType().getKey())));
+                                "type", event.getItem().getType().getKey().toString())));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -116,7 +123,7 @@ public class SimpleStatsListener implements Listener {
         this.addEntry(event.getWhoClicked().getUniqueId(), "Items crafted",
                 new StatTimeEntry(System.currentTimeMillis(), event.getRecipe().getResult().getAmount(),
                         Map.of("world", event.getWhoClicked().getWorld().getUID().toString(),
-                                "type", event.getRecipe().getResult().getType().getKey())));
+                                "type", event.getRecipe().getResult().getType().getKey().toString())));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -124,7 +131,7 @@ public class SimpleStatsListener implements Listener {
         this.addEntry(event.getPlayer().getUniqueId(), "Items dropped",
                 new StatTimeEntry(System.currentTimeMillis(), event.getItemDrop().getItemStack().getAmount(),
                         Map.of("world", event.getPlayer().getWorld().getUID().toString(),
-                                "type", event.getItemDrop().getItemStack().getType().getKey())));
+                                "type", event.getItemDrop().getItemStack().getType().getKey().toString())));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -135,7 +142,7 @@ public class SimpleStatsListener implements Listener {
         this.addEntry(event.getEntity().getUniqueId(), "Items picked up",
                 new StatTimeEntry(System.currentTimeMillis(), event.getItem().getItemStack().getAmount(),
                         Map.of("world", event.getEntity().getWorld().getUID().toString(),
-                                "type", event.getItem().getItemStack().getType().getKey())));
+                                "type", event.getItem().getItemStack().getType().getKey().toString())));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -146,16 +153,26 @@ public class SimpleStatsListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     protected void onPlayerJoin(PlayerJoinEvent event) {
-        this.addEntry(event.getPlayer().getUniqueId(), "Last join",
-                new StatTimeEntry(System.currentTimeMillis(), 0, getMetaData(event.getPlayer())));
+        PlayerManager.getInstance().getPlayer(event.getPlayer().getUniqueId()).subscribe(player -> {
+            StatManager.getInstance().getStat("Last join").ifPresent(stat -> {
+                player.getStats(stat).resetWhere("world", event.getPlayer().getWorld().getUID().toString());
+                this.addEntry(event.getPlayer().getUniqueId(), "Last join",
+                        new StatTimeEntry(System.currentTimeMillis(), System.currentTimeMillis(), getMetaData(event.getPlayer())));
+            });
+        });
         this.addEntry(event.getPlayer().getUniqueId(), "Times joined",
                 new StatTimeEntry(System.currentTimeMillis(), 1, getMetaData(event.getPlayer())));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     protected void onPlayerQuit(PlayerQuitEvent event) {
-        this.addEntry(event.getPlayer().getUniqueId(), "Last quit",
-                new StatTimeEntry(System.currentTimeMillis(), 0, getMetaData(event.getPlayer())));
+        PlayerManager.getInstance().getPlayer(event.getPlayer().getUniqueId()).subscribe(player -> {
+            StatManager.getInstance().getStat("Last quit").ifPresent(stat -> {
+                player.getStats(stat).resetWhere("world", event.getPlayer().getWorld().getUID().toString());
+                this.addEntry(event.getPlayer().getUniqueId(), "Last quit",
+                        new StatTimeEntry(System.currentTimeMillis(), System.currentTimeMillis(), getMetaData(event.getPlayer())));
+            });
+        });
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -213,7 +230,7 @@ public class SimpleStatsListener implements Listener {
         this.addEntry(event.getPlayer().getUniqueId(), "Tools broken",
                 new StatTimeEntry(System.currentTimeMillis(), 1,
                         Map.of("world", event.getPlayer().getWorld().getUID().toString(),
-                                "type", event.getBrokenItem().getType().getKey())));
+                                "type", event.getBrokenItem().getType().getKey().toString())));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

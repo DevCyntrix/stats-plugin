@@ -82,11 +82,21 @@ public class MySQLStorage extends StorageManager {
         StatManager.getInstance().getStat("Blocks placed").ifPresent(stat -> this.handlers.put(stat, new BlockPlaceStorage()));
         StatManager.getInstance().getStat("Deaths").ifPresent(stat -> this.handlers.put(stat, new DeathStorage()));
         StatManager.getInstance().getStat("Kills").ifPresent(stat -> this.handlers.put(stat, new KillStorage()));
+        StatManager.getInstance().getStat("Last join").ifPresent(stat -> this.handlers.put(stat, new LastJoinStorage()));
+        StatManager.getInstance().getStat("Last quit").ifPresent(stat -> this.handlers.put(stat, new LastQuitStorage()));
+        StatManager.getInstance().getStat("Trades performed").ifPresent(stat -> this.handlers.put(stat, new TradesPerformedStorage()));
+        StatManager.getInstance().getStat("Move").ifPresent(stat -> this.handlers.put(stat, new MoveStorage()));
 
         // Register all other stats to the default
         StatManager.getInstance().getStats().stream()
                 .filter(stat -> !this.handlers.containsKey(stat))
-                .forEach(stat -> this.handlers.put(stat, new GeneralPlayerStorage(stat)));
+                .forEach(stat -> {
+                    if (stat.getMetaData().stream().anyMatch(meta -> meta.getId().equalsIgnoreCase("type"))) {
+                        this.handlers.put(stat, new TypedStatStorage(stat));
+                    } else {
+                        this.handlers.put(stat, new GeneralStatStorage(stat));
+                    }
+                });
     }
 
     private void storeEntry(StatsPlayer player, StatsContainer container, StatTimeEntry entry) throws SQLException {

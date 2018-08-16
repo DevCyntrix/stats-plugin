@@ -15,7 +15,7 @@ public class DamageTakenStat extends Stat {
     @Override
     public Collection<StatMetaData> getMetaData() {
         return List.of(new StatMetaData("world", String.class, true),
-                new StatMetaData("cause", String.class, true));
+                new StatMetaData("type", String.class, true));
     }
 
     @Override

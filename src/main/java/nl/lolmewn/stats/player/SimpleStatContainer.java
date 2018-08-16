@@ -39,4 +39,12 @@ public class SimpleStatContainer {
     public void shutdown() {
         this.subscription.dispose();
     }
+
+    public void reset() {
+        this.values.clear();
+    }
+
+    public void removeWhere(String key, Object value) {
+        this.values.entrySet().removeIf(entry -> entry.getKey().containsKey(key) && entry.getKey().get(key).equals(value));
+    }
 }

@@ -2,6 +2,7 @@ package nl.lolmewn.stats.stat;
 
 import nl.lolmewn.stats.player.StatMetaData;
 
+import java.text.DecimalFormat;
 import java.util.Collection;
 
 public abstract class Stat {
@@ -15,7 +16,8 @@ public abstract class Stat {
     }
 
     public String format(double value) {
-        return String.format("%1$,.2f", value);
+        return new DecimalFormat("#,##0.##").format(value);
+//        return String.format("%1$,.2f", value);
     }
 
     public String getName() {
