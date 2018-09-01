@@ -1,6 +1,7 @@
 package nl.lolmewn.stats.listener.bukkit;
 
 import nl.lolmewn.stats.BukkitUtil;
+import nl.lolmewn.stats.Util;
 import nl.lolmewn.stats.player.PlayerManager;
 import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.stat.StatManager;
@@ -41,7 +42,7 @@ public class EntityDeath implements Listener {
     }
 
     private Map<String, Object> getMetadata(EntityDeathEvent event) {
-        return Map.of("world", event.getEntity().getLocation().getWorld().getUID().toString(),
+        return Util.of("world", event.getEntity().getLocation().getWorld().getUID().toString(),
                 "victimType", event.getEntityType().toString(),
                 "victimName", Optional.ofNullable(event.getEntity().getCustomName()).orElse(event.getEntityType().toString()),
                 "weapon", BukkitUtil.getWeaponName(event.getEntity().getKiller().getInventory().getItemInMainHand())

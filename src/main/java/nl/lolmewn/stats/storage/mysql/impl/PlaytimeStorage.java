@@ -40,7 +40,7 @@ public class PlaytimeStorage implements StatMySQLHandler {
                 }
                 entries.add(new StatTimeEntry(
                         set.getTimestamp("last_updated").getTime(), set.getDouble("amount"),
-                        Map.of("world", worldUUID.get().toString()
+                        Util.of("world", worldUUID.get().toString()
                         )));
             }
         }

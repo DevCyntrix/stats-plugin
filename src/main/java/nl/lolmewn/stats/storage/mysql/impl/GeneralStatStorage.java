@@ -52,7 +52,7 @@ public class GeneralStatStorage implements StatMySQLHandler {
                 }
                 entries.add(new StatTimeEntry(
                         set.getTimestamp("timestamp").getTime(), set.getDouble("amount"),
-                        Map.of("world", worldUUID.get().toString()
+                        Util.of("world", worldUUID.get().toString()
                         )));
             }
         }

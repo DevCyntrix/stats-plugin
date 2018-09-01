@@ -1,10 +1,10 @@
 package nl.lolmewn.stats.stat.impl;
 
+import nl.lolmewn.stats.Util;
 import nl.lolmewn.stats.player.StatMetaData;
 import nl.lolmewn.stats.stat.Stat;
 
 import java.util.Collection;
-import java.util.List;
 
 public class BlockBreakStat extends Stat {
 
@@ -14,7 +14,7 @@ public class BlockBreakStat extends Stat {
 
     @Override
     public Collection<StatMetaData> getMetaData() {
-        return List.of(new StatMetaData("world", String.class, true),
+        return Util.listOf(new StatMetaData("world", String.class, true),
                 new StatMetaData("loc_x", Integer.class, false),
                 new StatMetaData("loc_y", Integer.class, false),
                 new StatMetaData("loc_z", Integer.class, false),

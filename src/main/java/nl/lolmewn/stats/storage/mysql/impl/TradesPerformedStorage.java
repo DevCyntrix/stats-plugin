@@ -45,7 +45,7 @@ public class TradesPerformedStorage implements StatMySQLHandler {
                 }
                 entries.add(new StatTimeEntry(
                         set.getTimestamp("timestamp").getTime(), 1,
-                        Map.of("world", worldUUID.get().toString(),
+                        Util.of("world", worldUUID.get().toString(),
                                 "item", this.gson.fromJson(set.getString("item"), SimpleItem.class),
                                 "price", this.gson.fromJson(set.getString("price"), new TypeToken<ArrayList<SimpleItem>>() {
                                 }.getType()))

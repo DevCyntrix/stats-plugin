@@ -40,7 +40,7 @@ public class KillStorage implements StatMySQLHandler {
                 }
                 entries.add(new StatTimeEntry(
                         set.getTimestamp("timestamp").getTime(), 1,
-                        Map.of("world", worldUUID.get().toString(),
+                        Util.of("world", worldUUID.get().toString(),
                                 "victimType", set.getString("victimType"),
                                 "victimName", set.getString("victimName"),
                                 "weapon", set.getString("weapon"))

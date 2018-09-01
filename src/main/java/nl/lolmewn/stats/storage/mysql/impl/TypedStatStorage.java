@@ -53,7 +53,7 @@ public class TypedStatStorage implements StatMySQLHandler {
                 }
                 entries.add(new StatTimeEntry(
                         set.getTimestamp("timestamp").getTime(), set.getDouble("amount"),
-                        Map.of("world", worldUUID.get().toString(), "type", set.getString("type")
+                        Util.of("world", worldUUID.get().toString(), "type", set.getString("type")
                         )));
             }
         }

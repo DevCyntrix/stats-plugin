@@ -8,7 +8,6 @@ import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.stat.StatManager;
 import org.bukkit.Bukkit;
 
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class Playtime {
@@ -30,7 +29,7 @@ public class Playtime {
                                 StatManager.getInstance().getStat("Playtime").ifPresent(stat ->
                                         statsPlayer.getStats(stat).addEntry(
                                                 new StatTimeEntry(System.currentTimeMillis(), 1,
-                                                        Map.of("world", player.getWorld().getUID().toString()))
+                                                        Util.of("world", player.getWorld().getUID().toString()))
                                         )
                                 ), Util::handleError
                         )

@@ -38,7 +38,7 @@ public class LastQuitStorage implements StatMySQLHandler {
                 }
                 long timestamp = set.getTimestamp("timestamp").getTime();
                 entries.add(new StatTimeEntry(
-                        timestamp, timestamp, Map.of("world", worldUUID.get().toString())
+                        timestamp, timestamp, Util.of("world", worldUUID.get().toString())
                 ));
             }
         }

@@ -43,7 +43,7 @@ public class MoveStorage implements StatMySQLHandler {
                 double amount = set.getDouble("amount");
                 entries.add(new StatTimeEntry(
                         set.getTimestamp("timestamp").getTime(), amount,
-                        Map.of("world", worldUUID.get().toString(), "type", set.getString("type"))));
+                        Util.of("world", worldUUID.get().toString(), "type", set.getString("type"))));
             }
         }
         return entries;

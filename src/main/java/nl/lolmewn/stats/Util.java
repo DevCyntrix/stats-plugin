@@ -1,7 +1,6 @@
 package nl.lolmewn.stats;
 
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,5 +32,77 @@ public class Util {
     public static void handleError(Throwable throwable) {
         System.err.println("Error occurred, see stacktrace below");
         throwable.printStackTrace(System.err);
+    }
+
+    public static <V> List<V> of(V v1) {
+        List<V> list = new ArrayList<>();
+        list.add(v1);
+        return list;
+    }
+
+    public static <V> List<V> listOf(V v1, V v2) {
+        List<V> list = of(v1);
+        list.add(v2);
+        return list;
+    }
+
+    public static <V> List<V> listOf(V v1, V v2, V v3) {
+        List<V> list = listOf(v1, v2);
+        list.add(v3);
+        return list;
+    }
+
+    public static <V> List<V> listOf(V v1, V v2, V v3, V v4) {
+        List<V> list = listOf(v1, v2, v3);
+        list.add(v4);
+        return list;
+    }
+
+    public static <V> List<V> listOf(V v1, V v2, V v3, V v4, V v5) {
+        List<V> list = listOf(v1, v2, v3, v4);
+        list.add(v5);
+        return list;
+    }
+
+    public static <V> List<V> listOf(V v1, V v2, V v3, V v4, V v5, V v6) {
+        List<V> list = listOf(v1, v2, v3, v4, v5);
+        list.add(v6);
+        return list;
+    }
+
+    public static <K, V> Map<K, V> of(K k1, V v1) {
+        LinkedHashMap<K, V> map = new LinkedHashMap<>();
+        map.put(k1, v1);
+        return map;
+    }
+
+    public static <K, V> Map<K, V> of(K k1, V v1, K k2, V v2) {
+        Map<K, V> map = of(k1, v1);
+        map.put(k2, v2);
+        return map;
+    }
+
+    public static <K, V> Map<K, V> of(K k1, V v1, K k2, V v2, K k3, V v3) {
+        Map<K, V> map = of(k1, v1, k2, v2);
+        map.put(k3, v3);
+        return map;
+    }
+
+    public static <K, V> Map<K, V> of(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4) {
+        Map<K, V> map = of(k1, v1, k2, v2, k3, v3);
+        map.put(k4, v4);
+        return map;
+    }
+
+    public static <K, V> Map<K, V> of(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5) {
+        Map<K, V> map = of(k1, v1, k2, v2, k3, v3, k4, v4);
+        map.put(k5, v5);
+        return map;
+    }
+
+    public static <K, V> Map<K, V> of(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4, K k5, V v5, K k6, V v6) {
+        Map<K, V> map = of(k1, v1, k2, v2, k3, v3, k4, v4, k5, v5);
+        map.put(k6, v6);
+        return map;
     }
 }

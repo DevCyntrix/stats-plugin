@@ -2,6 +2,7 @@ package nl.lolmewn.stats.listener.bukkit;
 
 import io.reactivex.disposables.Disposable;
 import nl.lolmewn.stats.BukkitUtil;
+import nl.lolmewn.stats.Util;
 import nl.lolmewn.stats.player.PlayerManager;
 import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.stat.StatManager;
@@ -41,7 +42,7 @@ public class SimpleStatsListener implements Listener {
     }
 
     public Map<String, Object> getMetaData(LivingEntity entity) {
-        return Map.of("world", entity.getWorld().getUID().toString());
+        return Util.of("world", entity.getWorld().getUID().toString());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -63,7 +64,7 @@ public class SimpleStatsListener implements Listener {
     protected void onBucketEmpty(PlayerBucketEmptyEvent event) {
         this.addEntry(event.getPlayer().getUniqueId(), "Buckets emptied",
                 new StatTimeEntry(System.currentTimeMillis(), 1,
-                        Map.of("world", event.getPlayer().getWorld().getUID().toString(),
+                        Util.of("world", event.getPlayer().getWorld().getUID().toString(),
                                 "type", event.getBucket().getKey().toString())));
     }
 
@@ -80,7 +81,7 @@ public class SimpleStatsListener implements Listener {
         }
         this.addEntry(event.getEntity().getUniqueId(), "Damage taken",
                 new StatTimeEntry(System.currentTimeMillis(), Math.round(event.getFinalDamage()),
-                        Map.of("world", event.getEntity().getWorld().getUID().toString(),
+                        Util.of("world", event.getEntity().getWorld().getUID().toString(),
                                 "type", event.getCause().toString())));
     }
 
@@ -88,7 +89,7 @@ public class SimpleStatsListener implements Listener {
     protected void onEggThrow(PlayerEggThrowEvent event) {
         this.addEntry(event.getPlayer().getUniqueId(), "Eggs thrown",
                 new StatTimeEntry(System.currentTimeMillis(), 1,
-                        Map.of("world", event.getPlayer().getWorld().getUID().toString(),
+                        Util.of("world", event.getPlayer().getWorld().getUID().toString(),
                                 "type", event.getEgg().getType().toString())));
     }
 
@@ -103,7 +104,7 @@ public class SimpleStatsListener implements Listener {
         Item fish = (Item) event.getCaught();
         this.addEntry(event.getPlayer().getUniqueId(), "Fish caught",
                 new StatTimeEntry(System.currentTimeMillis(), 1,
-                        Map.of("world", event.getPlayer().getWorld().getUID().toString(),
+                        Util.of("world", event.getPlayer().getWorld().getUID().toString(),
                                 "type", fish.getItemStack().getType().getKey().toString())));
     }
 
@@ -111,7 +112,7 @@ public class SimpleStatsListener implements Listener {
     protected void onFoodConsumed(PlayerItemConsumeEvent event) {
         this.addEntry(event.getPlayer().getUniqueId(), "Food consumed",
                 new StatTimeEntry(System.currentTimeMillis(), 1,
-                        Map.of("world", event.getPlayer().getWorld().getUID().toString(),
+                        Util.of("world", event.getPlayer().getWorld().getUID().toString(),
                                 "type", event.getItem().getType().getKey().toString())));
     }
 
@@ -122,7 +123,7 @@ public class SimpleStatsListener implements Listener {
         }
         this.addEntry(event.getWhoClicked().getUniqueId(), "Items crafted",
                 new StatTimeEntry(System.currentTimeMillis(), event.getRecipe().getResult().getAmount(),
-                        Map.of("world", event.getWhoClicked().getWorld().getUID().toString(),
+                        Util.of("world", event.getWhoClicked().getWorld().getUID().toString(),
                                 "type", event.getRecipe().getResult().getType().getKey().toString())));
     }
 
@@ -130,7 +131,7 @@ public class SimpleStatsListener implements Listener {
     protected void onItemDrop(PlayerDropItemEvent event) {
         this.addEntry(event.getPlayer().getUniqueId(), "Items dropped",
                 new StatTimeEntry(System.currentTimeMillis(), event.getItemDrop().getItemStack().getAmount(),
-                        Map.of("world", event.getPlayer().getWorld().getUID().toString(),
+                        Util.of("world", event.getPlayer().getWorld().getUID().toString(),
                                 "type", event.getItemDrop().getItemStack().getType().getKey().toString())));
     }
 
@@ -141,7 +142,7 @@ public class SimpleStatsListener implements Listener {
         }
         this.addEntry(event.getEntity().getUniqueId(), "Items picked up",
                 new StatTimeEntry(System.currentTimeMillis(), event.getItem().getItemStack().getAmount(),
-                        Map.of("world", event.getEntity().getWorld().getUID().toString(),
+                        Util.of("world", event.getEntity().getWorld().getUID().toString(),
                                 "type", event.getItem().getItemStack().getType().getKey().toString())));
     }
 
@@ -185,7 +186,7 @@ public class SimpleStatsListener implements Listener {
         }
         this.addEntry(event.getPlayer().getUniqueId(), "Move",
                 new StatTimeEntry(System.currentTimeMillis(), event.getFrom().distance(event.getTo()),
-                        Map.of("world", event.getFrom().getWorld().getUID().toString(),
+                        Util.of("world", event.getFrom().getWorld().getUID().toString(),
                                 "type", getMoveType(event.getPlayer()))));
     }
 
@@ -215,7 +216,7 @@ public class SimpleStatsListener implements Listener {
     protected void onEntityShear(PlayerShearEntityEvent event) {
         this.addEntry(event.getPlayer().getUniqueId(), "Times sheared",
                 new StatTimeEntry(System.currentTimeMillis(), 1,
-                        Map.of("world", event.getPlayer().getWorld().getUID().toString(),
+                        Util.of("world", event.getPlayer().getWorld().getUID().toString(),
                                 "type", event.getEntity().getType().toString())));
     }
 
@@ -229,7 +230,7 @@ public class SimpleStatsListener implements Listener {
     public void onToolBreak(PlayerItemBreakEvent event) {
         this.addEntry(event.getPlayer().getUniqueId(), "Tools broken",
                 new StatTimeEntry(System.currentTimeMillis(), 1,
-                        Map.of("world", event.getPlayer().getWorld().getUID().toString(),
+                        Util.of("world", event.getPlayer().getWorld().getUID().toString(),
                                 "type", event.getBrokenItem().getType().getKey().toString())));
     }
 
@@ -250,7 +251,7 @@ public class SimpleStatsListener implements Listener {
         }
         this.addEntry(event.getWhoClicked().getUniqueId(), "Trades performed",
                 new StatTimeEntry(System.currentTimeMillis(), 1,
-                        Map.of("world", event.getWhoClicked().getWorld().getUID().toString(),
+                        Util.of("world", event.getWhoClicked().getWorld().getUID().toString(),
                                 "item", BukkitUtil.getSimpleItem(inventory.getSelectedRecipe().getResult()),
                                 "price", BukkitUtil.getSimpleItems(inventory.getSelectedRecipe().getIngredients()))));
     }

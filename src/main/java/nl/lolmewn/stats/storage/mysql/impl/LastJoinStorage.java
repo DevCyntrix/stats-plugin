@@ -38,7 +38,7 @@ public class LastJoinStorage implements StatMySQLHandler {
                 }
                 entries.add(new StatTimeEntry(
                         set.getTimestamp("timestamp").getTime(), set.getTimestamp("timestamp").getTime(),
-                        Map.of("world", worldUUID.get().toString())
+                        Util.of("world", worldUUID.get().toString())
                 ));
             }
         }

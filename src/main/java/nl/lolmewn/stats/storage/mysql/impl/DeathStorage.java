@@ -41,7 +41,7 @@ public class DeathStorage implements StatMySQLHandler {
                 }
                 entries.add(new StatTimeEntry(
                         set.getTimestamp("timestamp").getTime(), 1,
-                        Map.of("world", worldUUID.get().toString(),
+                        Util.of("world", worldUUID.get().toString(),
                                 "loc_x", set.getDouble("loc_x"),
                                 "loc_y", set.getDouble("loc_y"),
                                 "loc_z", set.getDouble("loc_z"),

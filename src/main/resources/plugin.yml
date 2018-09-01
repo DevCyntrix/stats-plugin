@@ -1,5 +1,5 @@
 name: Stats
-version: 5.0
+version: 5.2.0
 main: nl.lolmewn.stats.BukkitMain
 author: Lolmewn
 api-version: 1.13

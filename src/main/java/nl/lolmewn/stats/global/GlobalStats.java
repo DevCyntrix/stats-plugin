@@ -16,7 +16,6 @@ import nl.lolmewn.stats.player.StatsContainer;
 import nl.lolmewn.stats.player.StatsPlayer;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 public class GlobalStats {
@@ -56,9 +55,9 @@ public class GlobalStats {
                     player.getUuid().toString(), statsContainer.getStat().getName(),
                     statTimeEntry.getAmount(), statsContainer.getTotal(), statTimeEntry.getTimestamp(),
                     Thread.currentThread().getName()));
-            String message = this.gson.toJson(Map.of(
+            String message = this.gson.toJson(Util.of(
                     "serverUuid", SharedMain.getServerUuid(),
-                    "content", Map.of(
+                    "content", Util.of(
                             "playerUuid", player.getUuid().toString(),
                             "amount", statTimeEntry.getAmount(),
                             "metadata", statTimeEntry.getMetadata(),

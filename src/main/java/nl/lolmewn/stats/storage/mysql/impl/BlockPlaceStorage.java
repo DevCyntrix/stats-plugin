@@ -41,7 +41,7 @@ public class BlockPlaceStorage implements StatMySQLHandler {
                 }
                 entries.add(new StatTimeEntry(
                         set.getTimestamp("timestamp").getTime(), 1,
-                        Map.of("world", worldUUID.get().toString(),
+                        Util.of("world", worldUUID.get().toString(),
                                 "loc_x", set.getInt("loc_x"),
                                 "loc_y", set.getInt("loc_y"),
                                 "loc_z", set.getInt("loc_z"),
