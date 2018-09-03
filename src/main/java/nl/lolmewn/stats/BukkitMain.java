@@ -6,6 +6,7 @@ import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import nl.lolmewn.stats.converters.Stats2;
 import nl.lolmewn.stats.global.GlobalStats;
 import nl.lolmewn.stats.listener.Playtime;
 import nl.lolmewn.stats.listener.bukkit.*;
@@ -39,6 +40,8 @@ public class BukkitMain extends JavaPlugin {
         super.getConfig().options().copyDefaults(true);
         super.saveConfig();
 
+        this.checkConversion();
+
         if (super.getConfig().getString("mysql.username", "username").equals("username")) {
             getLogger().info("Stats is not yet configured");
             getLogger().info("Stats has generated a config.yml");
@@ -68,6 +71,24 @@ public class BukkitMain extends JavaPlugin {
         SharedMain.setDebug(super.getConfig().getBoolean("debug", false));
         if (!super.getConfig().getBoolean("global-stats-opt-out", false)) {
             this.globalStats = new GlobalStats();
+        }
+    }
+
+    private void checkConversion() {
+        if (getConfig().contains("storage-version")) {
+            // Stats3
+        }
+        if (getConfig().contains("snapshots")) {
+            // Stats2
+            new Stats2(this.getConfig());
+        }
+        if (getConfig().contains("convertFrom")) {
+            if (getConfig().getInt("convertFrom") == 2) {
+                new Stats2(this.getConfig());
+            }
+            if (getConfig().getInt("convertFrom") == 3) {
+
+            }
         }
     }
 
