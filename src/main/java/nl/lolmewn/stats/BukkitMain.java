@@ -40,7 +40,17 @@ public class BukkitMain extends JavaPlugin {
         super.getConfig().options().copyDefaults(true);
         super.saveConfig();
 
-        this.checkConversion();
+        SharedMain.registerStats();
+
+        try {
+            this.checkConversion();
+        } catch (Exception e) {
+            e.printStackTrace();
+            getLogger().severe("Tried to convert data from an older version of Stats but it failed.");
+            getLogger().severe("Shutting down the plugin so you can investigate what went wrong!");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
 
         if (super.getConfig().getString("mysql.username", "username").equals("username")) {
             getLogger().info("Stats is not yet configured");
@@ -49,8 +59,6 @@ public class BukkitMain extends JavaPlugin {
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
-
-        SharedMain.registerStats();
 
         try {
             new MySQLStorage(this.getMySQLConfig());
@@ -74,17 +82,17 @@ public class BukkitMain extends JavaPlugin {
         }
     }
 
-    private void checkConversion() {
+    private void checkConversion() throws Exception {
         if (getConfig().contains("storage-version")) {
             // Stats3
         }
         if (getConfig().contains("snapshots")) {
             // Stats2
-            new Stats2(this.getConfig());
+            new Stats2(getLogger(), this.getConfig());
         }
         if (getConfig().contains("convertFrom")) {
             if (getConfig().getInt("convertFrom") == 2) {
-                new Stats2(this.getConfig());
+                new Stats2(getLogger(), this.getConfig());
             }
             if (getConfig().getInt("convertFrom") == 3) {
 

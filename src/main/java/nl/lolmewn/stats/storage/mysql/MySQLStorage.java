@@ -47,9 +47,14 @@ public class MySQLStorage extends StorageManager {
         this.disposable.add(PlayerManager.getInstance().subscribe(this.getPlayerConsumer(), Util::handleError));
     }
 
+    public void shutdown() {
+        this.dataSource.close();
+        this.disposable.dispose();
+        this.handlers.clear();
+    }
+
     private Consumer<StatsPlayer> getPlayerConsumer() {
         return player -> {
-            System.out.println("New player triggered: " + player.getUuid().toString());
             player.getContainers().forEach(cont -> // Listen to updates of already-in-place containers
                     this.disposable.add(cont.subscribe(this.getStatTimeEntryConsumer(player, cont), Util::handleError)));
             this.disposable.add(player.subscribe(this.getContainerConsumer(player), Util::handleError)); // Listen to new containers
