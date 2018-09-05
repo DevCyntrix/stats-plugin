@@ -53,7 +53,7 @@ public class MoveStorage implements StatMySQLHandler {
     public void storeEntry(Connection con, StatsPlayer player, StatsContainer container, StatTimeEntry entry) throws SQLException {
         try (PreparedStatement update = con.prepareStatement("UPDATE stats_move SET amount=amount+? " +
                 "WHERE player=UNHEX(?) AND world=UNHEX(?) AND type=?")) {
-            update.setLong(1, (long) entry.getAmount());
+            update.setDouble(1, entry.getAmount());
             update.setString(2, player.getUuid().toString().replace("-", ""));
             update.setString(3, entry.getMetadata().get("world").toString().replace("-", ""));
             update.setObject(4, entry.getMetadata().get("type"));
