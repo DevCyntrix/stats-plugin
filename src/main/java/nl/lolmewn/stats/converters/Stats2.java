@@ -40,6 +40,7 @@ public class Stats2 {
         this.clearCorruptData();
         logger.info("Done. Checking and adding UUIDs...");
         this.addUUIDs();
+        this.getWorldUUIDs();
         logger.info("Done. Now that all tables are set up nicely, we can start converting all data...");
         this.convertData();
         this.convertConfig();
@@ -51,6 +52,14 @@ public class Stats2 {
             worldUUIDMap.entrySet().stream()
                     .filter(entry -> Bukkit.getWorld(entry.getKey()) == null)
                     .forEach(entry -> logger.info(entry.getKey() + ": " + entry.getValue().toString()));
+        }
+    }
+
+    private void getWorldUUIDs() throws SQLException {
+        ResultSet set = con.createStatement().executeQuery("SELECT DISTINCT(world) FROM stats2_player");
+        while (set.next()) {
+            String worldName = set.getString("world");
+            this.worldUUIDMap.computeIfAbsent(worldName, s -> UUID.randomUUID());
         }
     }
 
@@ -117,8 +126,29 @@ public class Stats2 {
         convertMoveData();
     }
 
-    private void convertMoveData() {
-
+    private void convertMoveData() throws SQLException {
+        int worlds = this.worldUUIDMap.size();
+        StringBuilder replaceString = new StringBuilder();
+        for (int i = 0; i < worlds; i++) {
+            replaceString.append("REPLACE(");
+        }
+        String values = this.worldUUIDMap.entrySet().stream()
+                .map(entry -> ", '" + entry.getKey() + "', '" + entry.getValue().toString().replace("-", "") + "')")
+                .reduce("", String::concat);
+        con.createStatement().executeUpdate("INSERT INTO stats_move (player, world, amount, type) " +
+                "SELECT UNHEX(REPLACE(uuid, '-', ''))," +
+                "    UNHEX(" + replaceString.toString() + "world" + values + ")," +
+                "    distance," +
+                "    CASE" +
+                "        WHEN type = 0 THEN 'Walking'" +
+                "        WHEN type = 1 THEN 'BOAT'" +
+                "        WHEN type = 2 THEN 'MINECART'" +
+                "        WHEN type = 3 THEN 'PIG'" +
+                "        WHEN type = 4 THEN 'PIG'" +
+                "        WHEN type = 5 THEN 'HORSE'" +
+                "END" +
+                "    FROM stats.stats2_move AS d" +
+                "    JOIN stats.stats2_players AS p ON d.player_id=p.player_id;");
     }
 
     private void convertKillData() throws SQLException {

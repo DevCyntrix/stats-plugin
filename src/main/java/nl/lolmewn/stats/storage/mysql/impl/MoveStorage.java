@@ -21,7 +21,7 @@ public class MoveStorage implements StatMySQLHandler {
                     "  `world` BINARY(16) NOT NULL," +
                     "  `amount` DOUBLE NOT NULL," +
                     "  `type` TEXT NOT NULL," +
-                    "  `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                    "  `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," +
                     "  PRIMARY KEY (`id`)," +
                     "  UNIQUE INDEX `id_UNIQUE` (`id` ASC)," +
                     "  INDEX `uuid_world` (`player` ASC));");
