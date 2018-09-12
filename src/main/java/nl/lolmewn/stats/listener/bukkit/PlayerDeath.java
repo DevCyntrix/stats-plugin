@@ -1,13 +1,16 @@
 package nl.lolmewn.stats.listener.bukkit;
 
+import nl.lolmewn.stats.BukkitUtil;
 import nl.lolmewn.stats.Util;
 import nl.lolmewn.stats.player.PlayerManager;
 import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.stat.StatManager;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.plugin.Plugin;
 
@@ -27,6 +30,29 @@ public class PlayerDeath implements Listener {
                                 new StatTimeEntry(System.currentTimeMillis(), 1, generateMetadata(event))
                         )
                 ), Util::handleError);
+        if (event.getEntity().getLastDamageCause() instanceof EntityDamageByEntityEvent) {
+            EntityDamageByEntityEvent damageCause = (EntityDamageByEntityEvent) event.getEntity().getLastDamageCause();
+            if (damageCause.getDamager() instanceof Player) {
+                PlayerManager.getInstance().getPlayer(damageCause.getDamager().getUniqueId()).subscribe(player ->
+                        StatManager.getInstance().getStat("PVP Kills").ifPresent(stat ->
+                                player.getStats(stat).addEntry(
+                                        new StatTimeEntry(System.currentTimeMillis(), 1, generatePVPMeta(damageCause))
+                                )
+                        ), Util::handleError);
+                PlayerManager.getInstance().getPlayer(event.getEntity().getUniqueId()).subscribe(player ->
+                        StatManager.getInstance().getStat("PVP kill streak").ifPresent(stat ->
+                                player.getStats(stat).resetWhere("world", event.getEntity().getWorld().getUID().toString())
+                        ), Util::handleError);
+            }
+        }
+    }
+
+    private Map<String, Object> generatePVPMeta(EntityDamageByEntityEvent event) {
+        Player damager = (Player) event.getDamager();
+        return Util.of("world", event.getDamager().getWorld().getUID().toString(),
+                "victim", event.getEntity().getUniqueId().toString(),
+                "weaponType", damager.getInventory().getItemInMainHand().getType().getKey().toString(),
+                "weaponName", BukkitUtil.getWeaponName(((Player) event.getDamager()).getInventory().getItemInMainHand()));
     }
 
     private Map<String, Object> generateMetadata(PlayerDeathEvent event) {

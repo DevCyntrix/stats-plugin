@@ -15,8 +15,8 @@ public class PVPStat extends Stat {
     @Override
     public Collection<StatMetaData> getMetaData() {
         return Util.listOf(new StatMetaData("world", String.class, true),
-                new StatMetaData("victimType", String.class, true),
-                new StatMetaData("victimName", String.class, false),
-                new StatMetaData("weapon", String.class, false));
+                new StatMetaData("victim", String.class, true),
+                new StatMetaData("weaponType", String.class, false),
+                new StatMetaData("weaponName", String.class, false));
     }
 }

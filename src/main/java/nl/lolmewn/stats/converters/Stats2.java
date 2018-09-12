@@ -1,6 +1,8 @@
 package nl.lolmewn.stats.converters;
 
 import com.zaxxer.hikari.HikariDataSource;
+import nl.lolmewn.stats.stat.Stat;
+import nl.lolmewn.stats.stat.StatManager;
 import nl.lolmewn.stats.storage.mysql.MySQLConfig;
 import nl.lolmewn.stats.storage.mysql.MySQLStorage;
 import nl.lolmewn.stats.util.UUIDFetcher;
@@ -21,28 +23,63 @@ import java.util.logging.Logger;
 
 public class Stats2 {
 
-    private final String[] oldTables = {"move", "death", "kill", "player", "players", "pvp"};
+    private final String[] oldTables = {"move", "death", "kill", "player", "players", "pvp", "block"};
     private final FileConfiguration conf;
     private final Logger logger;
     private final Map<String, UUID> worldUUIDMap = new HashMap<>();
+    private final Map<String, Stat> columnStatMap = new HashMap<>();
     private Connection con;
 
     public Stats2(Logger logger, FileConfiguration config) throws SQLException, ParseException, InterruptedException, IOException {
         this.conf = config;
         this.logger = logger;
         Bukkit.getWorlds().forEach(world -> this.worldUUIDMap.put(world.getName(), world.getUID()));
+
+        StatManager.getInstance().getStat("Playtime").ifPresent(stat -> columnStatMap.put("playtime", stat));
+        StatManager.getInstance().getStat("Arrows shot").ifPresent(stat -> columnStatMap.put("arrows", stat));
+        StatManager.getInstance().getStat("XP gained").ifPresent(stat -> columnStatMap.put("xpgained", stat));
+        StatManager.getInstance().getStat("Times joined").ifPresent(stat -> columnStatMap.put("joins", stat));
+        StatManager.getInstance().getStat("Fish caught").ifPresent(stat -> columnStatMap.put("fishcatched", stat));
+        StatManager.getInstance().getStat("Damage taken").ifPresent(stat -> columnStatMap.put("damagetaken", stat));
+        StatManager.getInstance().getStat("Times kicked").ifPresent(stat -> columnStatMap.put("timeskicked", stat));
+        StatManager.getInstance().getStat("Tools broken").ifPresent(stat -> columnStatMap.put("toolsbroken", stat));
+        StatManager.getInstance().getStat("Eggs thrown").ifPresent(stat -> columnStatMap.put("eggsthrown", stat));
+        StatManager.getInstance().getStat("Items crafted").ifPresent(stat -> columnStatMap.put("itemscrafted", stat));
+        StatManager.getInstance().getStat("Food consumed").ifPresent(stat -> columnStatMap.put("omnomnom", stat));
+//        StatManager.getInstance().getStat("On fire").ifPresent(stat -> columnStatMap.put("onfire", stat));
+        StatManager.getInstance().getStat("Words said").ifPresent(stat -> columnStatMap.put("wordssaid", stat));
+        StatManager.getInstance().getStat("Commands performed").ifPresent(stat -> columnStatMap.put("commandsdone", stat));
+        StatManager.getInstance().getStat("Last quit").ifPresent(stat -> columnStatMap.put("lastleave", stat));
+        StatManager.getInstance().getStat("Last join").ifPresent(stat -> columnStatMap.put("lastjoin", stat));
+//        StatManager.getInstance().getStat("Votes").ifPresent(stat -> columnStatMap.put("votes", stat));
+        StatManager.getInstance().getStat("Teleports").ifPresent(stat -> columnStatMap.put("teleports", stat));
+        StatManager.getInstance().getStat("Items picked up").ifPresent(stat -> columnStatMap.put("itempickups", stat));
+        StatManager.getInstance().getStat("Beds entered").ifPresent(stat -> columnStatMap.put("bedenter", stat));
+//        StatManager.getInstance().getStat("Buckets filled").ifPresent(stat -> columnStatMap.put("bucketfill", stat));
+        StatManager.getInstance().getStat("Buckets emptied").ifPresent(stat -> columnStatMap.put("bucketempty", stat));
+//        StatManager.getInstance().getStat("World changed").ifPresent(stat -> columnStatMap.put("worldchange", stat));
+        StatManager.getInstance().getStat("Items dropped").ifPresent(stat -> columnStatMap.put("itemdrops", stat));
+        StatManager.getInstance().getStat("Times sheared").ifPresent(stat -> columnStatMap.put("shear", stat));
+        StatManager.getInstance().getStat("PVP kill streak").ifPresent(stat -> columnStatMap.put("pvpstreak", stat));
+//        StatManager.getInstance().getStat("PVP top streak").ifPresent(stat -> columnStatMap.put("pvptopstreak", stat));
+//        StatManager.getInstance().getStat("Money").ifPresent(stat -> columnStatMap.put("money", stat));
+        StatManager.getInstance().getStat("Trades performed").ifPresent(stat -> columnStatMap.put("trades", stat));
+
         logger.info("Converting data from Stats 2 format to Stats5...");
         logger.info("Checking database connection...");
         this.connectToDatabase();
         logger.info("Database connection successful. Backing up the data...");
         this.makeDatabaseBackups();
+        con.createStatement().execute("SET foreign_key_checks=0;");
         logger.info("Backups complete. Clearing corrupt data...");
         this.clearCorruptData();
         logger.info("Done. Checking and adding UUIDs...");
         this.addUUIDs();
         this.getWorldUUIDs();
         logger.info("Done. Now that all tables are set up nicely, we can start converting all data...");
+        con.setAutoCommit(false);
         this.convertData();
+        con.commit();
         this.convertConfig();
 
         if (this.worldUUIDMap.size() != Bukkit.getWorlds().size()) {
@@ -121,23 +158,101 @@ public class Stats2 {
         // For easy generation of new tables
         logger.info("Generating new tables...");
         new MySQLStorage(new MySQLConfig(getJDBCURL(), conf.getString("MySQL-User"), conf.getString("MySQL-Pass"))).shutdown();
+        convertBlockData();
+        convertMoveData();
         convertDeathData();
         convertKillData();
-        convertMoveData();
+        convertPVPData();
+        convertPlayerData();
     }
 
-    private void convertMoveData() throws SQLException {
+    private void convertBlockData() {
+
+    }
+
+    private void convertPlayerData() throws SQLException {
+        logger.info("Converting rest of player data...");
         int worlds = this.worldUUIDMap.size();
         StringBuilder replaceString = new StringBuilder();
         for (int i = 0; i < worlds; i++) {
             replaceString.append("REPLACE(");
         }
         String values = this.worldUUIDMap.entrySet().stream()
+                .sorted((o1, o2) -> o2.getKey().length() - o1.getKey().length())
                 .map(entry -> ", '" + entry.getKey() + "', '" + entry.getValue().toString().replace("-", "") + "')")
                 .reduce("", String::concat);
-        con.createStatement().executeUpdate("INSERT INTO stats_move (player, world, amount, type) " +
+        ResultSet set = con.createStatement().executeQuery("DESCRIBE stats2_player");
+        while (set.next()) {
+            String columnName = set.getString(1);
+            if (columnName.equalsIgnoreCase("counter") || columnName.equalsIgnoreCase("player_id")
+                    || columnName.equalsIgnoreCase("world") || columnName.equalsIgnoreCase("lastjoin")
+                    || columnName.equalsIgnoreCase("lastleave")) {
+                continue; // Skip these always
+            }
+            if (!this.columnStatMap.containsKey(columnName)) {
+                logger.info("Don't know how to convert column " + columnName);
+                continue;
+            }
+            Stat stat = this.columnStatMap.get(columnName);
+            if (stat.getMetaData().size() != 1) {
+                // aw shit.
+                logger.info("Ignoring " + stat.getName() + " for now.");
+                continue;
+            }
+            String tableName = "stats_" + stat.getName().toLowerCase().replace(" ", "_");
+            logger.info("Converting " + stat.getName() + " data...");
+            con.createStatement().executeUpdate("INSERT INTO " + tableName + " (player, world, amount)" +
+                    " SELECT UNHEX(REPLACE(uuid, '-', ''))," +
+                    " UNHEX(" + replaceString.toString() + "world" + values + ")," +
+                    " " + columnName +
+                    " FROM stats2_player as d JOIN stats2_players AS p on d.player_id=p.player_id");
+        }
+    }
+
+    private void convertPVPData() throws SQLException {
+        logger.info("Converting PVP data...");
+        ResultSet set = con.createStatement().executeQuery("SELECT p.uuid AS player, v.uuid AS victim, amount, world, weapon " +
+                "FROM stats2_pvp AS d " +
+                "JOIN stats2_players AS p ON d.player_id=p.player_id " +
+                "JOIN stats2_players AS v ON d.killed=v.player_id;");
+        PreparedStatement st = con.prepareStatement("INSERT INTO stats_pvp (player, world, victim, weaponType, weaponName) VALUE (" +
+                "UNHEX(?), UNHEX(?), UNHEX(?), ?, ?)");
+        int idx = 0;
+        while (set.next()) {
+            String worldName = set.getString("world");
+            UUID worldUUID = this.worldUUIDMap.computeIfAbsent(worldName, s -> UUID.randomUUID());
+
+            st.setString(1, set.getString("player").replace("-", ""));
+            st.setString(2, worldUUID.toString().replace("-", ""));
+            st.setString(3, set.getString("victim").replace("-", ""));
+            st.setString(4, "minecraft:" + set.getString("weapon").toLowerCase().replace(" ", "_"));
+            st.setString(5, set.getString("weapon"));
+            for (int i = 0; i < set.getInt("amount"); i++) {
+                st.addBatch();
+                if (++idx % 1024 == 0) {
+                    logger.info("Inserted " + idx + " rows...");
+                    st.executeBatch();
+                }
+            }
+        }
+        int[] batch = st.executeBatch();
+        logger.info("Inserted " + (batch.length + (idx - idx % 1024)) + " rows into stats_pvp");
+    }
+
+    private void convertMoveData() throws SQLException {
+        logger.info("Converting Move data...");
+        int worlds = this.worldUUIDMap.size();
+        StringBuilder replaceString = new StringBuilder();
+        for (int i = 0; i < worlds; i++) {
+            replaceString.append("REPLACE(");
+        }
+        String values = this.worldUUIDMap.entrySet().stream()
+                .sorted((o1, o2) -> o2.getKey().length() - o1.getKey().length())
+                .map(entry -> ", '" + entry.getKey() + "', '" + entry.getValue().toString().replace("-", "") + "')")
+                .reduce("", String::concat);
+        String query = "INSERT INTO stats_move (player, world, amount, type) " +
                 "SELECT UNHEX(REPLACE(uuid, '-', ''))," +
-                "    UNHEX(" + replaceString.toString() + "world" + values + ")," +
+                "    UNHEX(" + replaceString.toString() + " world " + values + ")," +
                 "    distance," +
                 "    CASE" +
                 "        WHEN type = 0 THEN 'Walking'" +
@@ -148,7 +263,9 @@ public class Stats2 {
                 "        WHEN type = 5 THEN 'HORSE'" +
                 "END" +
                 "    FROM stats.stats2_move AS d" +
-                "    JOIN stats.stats2_players AS p ON d.player_id=p.player_id;");
+                "    JOIN stats.stats2_players AS p ON d.player_id=p.player_id;";
+        logger.info("Move query: " + query);
+        con.createStatement().executeUpdate(query);
     }
 
     private void convertKillData() throws SQLException {
@@ -169,13 +286,14 @@ public class Stats2 {
             st.setString(5, "Unknown");
             for (int i = 0; i < set.getInt("amount"); i++) {
                 st.addBatch();
-                if (++idx % 100 == 0) {
-                    logger.info("Inserted " + idx + " rows...");
+                if (++idx % 1024 == 0) {
+                    logger.info("Inserting " + idx + " rows...");
+                    st.executeBatch();
                 }
             }
         }
         int[] batch = st.executeBatch();
-        logger.info("Inserted " + batch.length + " rows into stats_kill");
+        logger.info("Inserted " + (batch.length + (idx - idx % 1024)) + " rows into stats_kill");
     }
 
     private void convertDeathData() throws SQLException {
@@ -198,13 +316,13 @@ public class Stats2 {
             st.setString(6, set.getString("cause").toUpperCase());
             for (int i = 0; i < set.getInt("amount"); i++) {
                 st.addBatch();
-                if (++idx % 100 == 0) {
+                if (++idx % 1024 == 0) {
                     logger.info("Inserted " + idx + " rows...");
                 }
             }
         }
         int[] batch = st.executeBatch();
-        logger.info("Inserted " + batch.length + " rows into stats_death");
+        logger.info("Inserted " + (batch.length + (idx - idx % 1024)) + " rows into stats_death");
     }
 
     private void makeDatabaseBackups() throws SQLException {

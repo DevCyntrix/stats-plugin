@@ -91,6 +91,7 @@ public class MySQLStorage extends StorageManager {
         StatManager.getInstance().getStat("Last quit").ifPresent(stat -> this.handlers.put(stat, new LastQuitStorage()));
         StatManager.getInstance().getStat("Trades performed").ifPresent(stat -> this.handlers.put(stat, new TradesPerformedStorage()));
         StatManager.getInstance().getStat("Move").ifPresent(stat -> this.handlers.put(stat, new MoveStorage()));
+        StatManager.getInstance().getStat("PVP Kills").ifPresent(stat -> this.handlers.put(stat, new PVPStorage()));
 
         // Register all other stats to the default
         StatManager.getInstance().getStats().stream()
