@@ -9,15 +9,13 @@ import nl.lolmewn.stats.util.UUIDFetcher;
 import nl.lolmewn.stats.util.UUIDHistoricalFetcher;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.json.simple.parser.ParseException;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -72,7 +70,7 @@ public class Stats2 {
         this.makeDatabaseBackups();
         con.createStatement().execute("SET foreign_key_checks=0;");
         logger.info("Backups complete. Clearing corrupt data...");
-        this.clearCorruptData();
+        this.makeReadyForConversion();
         logger.info("Done. Checking and adding UUIDs...");
         this.addUUIDs();
         this.getWorldUUIDs();
@@ -104,7 +102,8 @@ public class Stats2 {
         ResultSet set = con.createStatement().executeQuery("SELECT `name`,`firstjoin` FROM stats2_players WHERE uuid IS NULL");
         Map<String, Long> namesToConvert = new HashMap<>();
         while (set != null && set.next()) {
-            namesToConvert.put(set.getString(1), set.getTimestamp(2).getTime() / 1000);
+            Timestamp stamp = set.getTimestamp(2);
+            namesToConvert.put(set.getString(1), (stamp == null ? System.currentTimeMillis() : set.getTimestamp(2).getTime()) / 1000);
         }
         logger.info("Found " + namesToConvert.size() + " names to get UUIDs for...");
         Map<String, UUID> uuidMap = new UUIDFetcher(new ArrayList<>(namesToConvert.keySet())).call();
@@ -142,7 +141,11 @@ public class Stats2 {
         st.executeBatch();
     }
 
-    private void clearCorruptData() throws SQLException {
+    private void makeReadyForConversion() throws SQLException {
+        logger.info("Adding indexes to player_id on all tables...");
+        for (String oldTable : this.oldTables) {
+            con.createStatement().execute("ALTER TABLE stats2_" + oldTable + " ADD INDEX `p_id` (`player_id` ASC)");
+        }
         logger.info("Clearing null or invalid data...");
         for (String oldTable : this.oldTables) {
             logger.info("Deleted " +
@@ -166,8 +169,61 @@ public class Stats2 {
         convertPlayerData();
     }
 
-    private void convertBlockData() {
+    private void convertBlockData() throws SQLException {
+        logger.info("Converting Block data...");
+        ResultSet set = con.createStatement().executeQuery("SELECT uuid, amount, world, blockID, break FROM stats2_block AS d " +
+                "JOIN stats2_players AS p ON d.player_id=p.player_id;");
+        PreparedStatement psBreak = con.prepareStatement("INSERT INTO stats_block_break (player, world, loc_x, loc_y, loc_z, material, tool) VALUE (" +
+                "UNHEX(?), UNHEX(?), ?, ?, ?, ?, ?)");
+        PreparedStatement psPlace = con.prepareStatement("INSERT INTO stats_block_place (player, world, loc_x, loc_y, loc_z, material) VALUE (" +
+                "UNHEX(?), UNHEX(?), ?, ?, ?, ?)");
+        Map<Integer, Material> materialMap = new HashMap<>();
+        for (Material mat : Material.values()) {
+            if (mat.isLegacy()) {
+                continue;
+            }
+            Material oldMaterial = Material.getMaterial(Material.LEGACY_PREFIX + mat.name());
+            if (oldMaterial == null) {
+                continue; // Maybe there wasn't one
+            }
+            materialMap.put(oldMaterial.getId(), mat);
+        }
+        psBreak.setString(7, "minecraft:air"); // You used fists. Always.
+        int idx = 0;
+        while (set.next()) {
+            Material material = materialMap.get(set.getInt("blockID"));
+            if (material == null) {
+                continue;
+            }
 
+            String worldName = set.getString("world");
+            UUID worldUUID = this.worldUUIDMap.computeIfAbsent(worldName, s -> UUID.randomUUID());
+            Location spawn = Optional.ofNullable(Bukkit.getWorld(worldUUID)).map(World::getSpawnLocation).orElse(new Location(null, 0, 0, 0));
+            PreparedStatement toUse;
+            if (set.getBoolean("break")) {
+                toUse = psBreak;
+            } else {
+                toUse = psPlace;
+            }
+
+            toUse.setString(1, set.getString("uuid").replace("-", ""));
+            toUse.setString(2, worldUUID.toString().replace("-", ""));
+            toUse.setInt(3, spawn.getBlockX());
+            toUse.setInt(4, spawn.getBlockY());
+            toUse.setInt(5, spawn.getBlockZ());
+            toUse.setString(6, material.getKey().toString());
+            for (int i = 0; i < set.getInt("amount"); i++) {
+                toUse.addBatch();
+                if (++idx % 100000 == 0) {
+                    logger.info("Inserting " + idx + " block data rows...");
+                    toUse.executeBatch();
+                }
+            }
+        }
+        int[] batch = psBreak.executeBatch();
+        int[] place = psPlace.executeBatch();
+        idx += batch.length + place.length;
+        logger.info("Inserted " + idx + " rows into the block tables");
     }
 
     private void convertPlayerData() throws SQLException {
@@ -332,82 +388,14 @@ public class Stats2 {
             this.con.createStatement().execute("RENAME TABLE " + prefix + oldTable + " TO backup_" + oldTable);
         }
         logger.info("Creating new stats2_<table> tables...");
-        this.con.createStatement().execute("CREATE TABLE `stats2_death` (" +
-                "  `counter` int(11) NOT NULL AUTO_INCREMENT," +
-                "  `player_id` int(11) DEFAULT NULL," +
-                "  `world` varchar(255) DEFAULT 'main'," +
-                "  `cause` varchar(32) NOT NULL," +
-                "  `amount` int(11) NOT NULL," +
-                "  `entity` tinyint(1) NOT NULL," +
-                "  PRIMARY KEY (`counter`)" +
-                ") ENGINE=InnoDB DEFAULT CHARSET=latin1;");
-        this.con.createStatement().execute("CREATE TABLE `stats2_kill` (" +
-                "  `counter` int(11) NOT NULL AUTO_INCREMENT," +
-                "  `player_id` int(11) DEFAULT NULL," +
-                "  `world` varchar(255) DEFAULT 'main'," +
-                "  `type` varchar(32) NOT NULL," +
-                "  `amount` int(11) NOT NULL," +
-                "  PRIMARY KEY (`counter`)" +
-                ") ENGINE=InnoDB DEFAULT CHARSET=latin1;");
-        this.con.createStatement().execute("CREATE TABLE `stats2_move` (" +
-                "  `counter` int(11) NOT NULL AUTO_INCREMENT," +
-                "  `player_id` int(11) DEFAULT NULL," +
-                "  `world` varchar(255) DEFAULT 'main'," +
-                "  `type` tinyint(4) NOT NULL," +
-                "  `distance` double NOT NULL," +
-                "  PRIMARY KEY (`counter`)" +
-                ") ENGINE=InnoDB DEFAULT CHARSET=latin1;");
-        this.con.createStatement().execute("CREATE TABLE `stats2_player` (" +
-                "  `counter` int(11) NOT NULL AUTO_INCREMENT," +
-                "  `player_id` int(11) DEFAULT NULL," +
-                "  `world` varchar(255) DEFAULT 'main'," +
-                "  `playtime` int(11) NOT NULL DEFAULT '0'," +
-                "  `arrows` int(11) DEFAULT '0'," +
-                "  `xpgained` int(11) DEFAULT '0'," +
-                "  `joins` int(11) DEFAULT '0'," +
-                "  `fishcatched` int(11) DEFAULT NULL," +
-                "  `damagetaken` int(11) DEFAULT '0'," +
-                "  `timeskicked` int(11) DEFAULT '0'," +
-                "  `toolsbroken` int(11) DEFAULT '0'," +
-                "  `eggsthrown` int(11) DEFAULT '0'," +
-                "  `itemscrafted` int(11) DEFAULT '0'," +
-                "  `omnomnom` int(11) DEFAULT '0'," +
-                "  `onfire` int(11) DEFAULT '0'," +
-                "  `wordssaid` int(11) DEFAULT '0'," +
-                "  `commandsdone` int(11) DEFAULT '0'," +
-                "  `lastleave` timestamp NULL DEFAULT '0000-00-00 00:00:00'," +
-                "  `lastjoin` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00'," +
-                "  `votes` int(11) DEFAULT '0'," +
-                "  `teleports` int(11) DEFAULT '0'," +
-                "  `itempickups` int(11) DEFAULT '0'," +
-                "  `bedenter` int(11) DEFAULT '0'," +
-                "  `bucketfill` int(11) DEFAULT '0'," +
-                "  `bucketempty` int(11) DEFAULT '0'," +
-                "  `worldchange` int(11) DEFAULT '0'," +
-                "  `itemdrops` int(11) DEFAULT '0'," +
-                "  `shear` int(11) DEFAULT '0'," +
-                "  `pvpstreak` int(11) DEFAULT '0'," +
-                "  `pvptopstreak` int(11) DEFAULT '0'," +
-                "  `money` double DEFAULT '0'," +
-                "  `trades` int(11) DEFAULT '0'," +
-                "  PRIMARY KEY (`counter`)" +
-                ") ENGINE=InnoDB DEFAULT CHARSET=latin1;");
-        this.con.createStatement().execute("CREATE TABLE `stats2_players` (" +
-                "  `player_id` int(11) NOT NULL," +
-                "  `UUID` varchar(255) DEFAULT NULL," +
-                "  `name` varchar(255) DEFAULT NULL," +
-                "  `Firstjoin` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," +
-                "  PRIMARY KEY (`player_id`)" +
-                ") ENGINE=InnoDB DEFAULT CHARSET=latin1;");
-        this.con.createStatement().execute("CREATE TABLE `stats2_pvp` (" +
-                "  `counter` int(11) NOT NULL AUTO_INCREMENT," +
-                "  `player_id` int(11) NOT NULL," +
-                "  `world` varchar(255) NOT NULL DEFAULT 'main'," +
-                "  `killed` int(11) DEFAULT NULL," +
-                "  `weapon` varchar(255) DEFAULT NULL," +
-                "  `amount` int(11) DEFAULT NULL," +
-                "  PRIMARY KEY (`counter`)" +
-                ") ENGINE=InnoDB DEFAULT CHARSET=latin1;");
+        for (String oldTable : this.oldTables) {
+            ResultSet set = con.createStatement().executeQuery("SHOW CREATE TABLE backup_" + oldTable);
+            if (!set.next()) {
+                throw new IllegalStateException("Could not generate CREATE TABLE query for " + oldTable);
+            }
+            con.createStatement().execute(set.getString(2).replace(set.getString(1), "stats2_" + oldTable));
+            con.createStatement().execute("ALTER TABLE stats2_" + oldTable + " AUTO_INCREMENT=0");
+        }
         logger.info("Copying data over...");
         for (String oldTable : this.oldTables) {
             logger.info("Copying from backup_" + oldTable + " to stats2_" + oldTable + "...");
@@ -420,6 +408,7 @@ public class Stats2 {
         hds.setJdbcUrl(getJDBCURL());
         hds.setPassword(conf.getString("MySQL-Pass"));
         hds.setUsername(conf.getString("MySQL-User"));
+        hds.addDataSourceProperty("zeroDateTimeBehavior", "convertToNull");
         this.con = hds.getConnection();
         this.con.createStatement().execute("SELECT 1"); // See if the connection works
     }
