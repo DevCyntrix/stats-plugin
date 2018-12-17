@@ -1,11 +1,10 @@
 package nl.lolmewn.stats.converters;
 
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 
 public class Stats2 {
 
-    private final YamlConfiguration conf;
+    private final FileConfiguration conf;
 
     public Stats2(FileConfiguration config) {
         this.conf = config;

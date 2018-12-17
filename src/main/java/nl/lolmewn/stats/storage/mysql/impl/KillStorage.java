@@ -17,12 +17,14 @@ public class KillStorage implements StatMySQLHandler {
                     "  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT," +
                     "  `player` BINARY(16) NOT NULL," +
                     "  `world` BINARY(16) NOT NULL," +
-                    "  `victimType` TEXT NOT NULL," +
-                    "  `victimName` TEXT NOT NULL," +
-                    "  `weapon` TEXT NOT NULL," +
-                    "  `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                    "  `victimType` VARCHAR(64) NOT NULL," +
+                    "  `victimName` VARCHAR(64) NOT NULL," +
+                    "  `weapon` VARCHAR(128) NOT NULL," +
+                    "  `amount` DOUBLE NOT NULL," +
+                    "  `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," +
                     "  PRIMARY KEY (`id`)," +
                     "  UNIQUE INDEX `id_UNIQUE` (`id` ASC)," +
+                    "  UNIQUE KEY `rest_UNIQUE` (`player`, `world`, `victimType`, `victimName`, `weapon`)," +
                     "  INDEX `uuid` (`player` ASC));");
         }
     }
@@ -39,7 +41,7 @@ public class KillStorage implements StatMySQLHandler {
                     throw new IllegalStateException("Found world UUID that is not a UUID: " + set.getString("world_uuid"));
                 }
                 entries.add(new StatTimeEntry(
-                        set.getTimestamp("timestamp").getTime(), 1,
+                        set.getTimestamp("last_updated").getTime(), set.getDouble("amount"),
                         Util.of("world", worldUUID.get().toString(),
                                 "victimType", set.getString("victimType"),
                                 "victimName", set.getString("victimName"),
@@ -52,14 +54,14 @@ public class KillStorage implements StatMySQLHandler {
 
     @Override
     public void storeEntry(Connection con, StatsPlayer player, StatsContainer container, StatTimeEntry entry) throws SQLException {
-        try (PreparedStatement st = con.prepareStatement("INSERT INTO stats_kill (player, world, victimType, victimName, weapon, timestamp) " +
-                "VALUES (UNHEX(?), UNHEX(?), ?, ?, ?, ?)")) {
+        try (PreparedStatement st = con.prepareStatement("INSERT INTO stats_kill (player, world, victimType, victimName, weapon, amount) " +
+                "VALUES (UNHEX(?), UNHEX(?), ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount=amount+VALUES(amount)")) {
             st.setString(1, player.getUuid().toString().replace("-", ""));
             st.setString(2, entry.getMetadata().get("world").toString().replace("-", ""));
             st.setString(3, entry.getMetadata().get("victimType").toString());
             st.setObject(4, entry.getMetadata().get("victimName"));
             st.setString(5, entry.getMetadata().get("weapon").toString());
-            st.setTimestamp(6, new Timestamp(entry.getTimestamp()));
+            st.setDouble(6, entry.getAmount());
             st.execute();
         }
     }

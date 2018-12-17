@@ -43,8 +43,17 @@ public class MySQLStorage extends StorageManager {
 
         this.registerHandlers();
         this.generateTables();
+        this.checkTableUpgrades();
         System.out.println("MySQL ready to go!");
         this.disposable.add(PlayerManager.getInstance().subscribe(this.getPlayerConsumer(), Util::handleError));
+    }
+
+    private void checkTableUpgrades() {
+        try (Connection con = this.getConnection()) {
+            new MySQLUpgradeChecker(con);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     private Consumer<StatsPlayer> getPlayerConsumer() {
@@ -77,15 +86,15 @@ public class MySQLStorage extends StorageManager {
     }
 
     private void registerHandlers() {
-        StatManager.getInstance().getStat("Playtime").ifPresent(stat -> this.handlers.put(stat, new PlaytimeStorage()));
-        StatManager.getInstance().getStat("Blocks broken").ifPresent(stat -> this.handlers.put(stat, new BlockBreakStorage()));
-        StatManager.getInstance().getStat("Blocks placed").ifPresent(stat -> this.handlers.put(stat, new BlockPlaceStorage()));
+//        StatManager.getInstance().getStat("Playtime").ifPresent(stat -> this.handlers.put(stat, new PlaytimeStorage()));
+        StatManager.getInstance().getStat("Blocks broken").ifPresent(stat -> this.handlers.put(stat, new BlockStorage(true)));
+        StatManager.getInstance().getStat("Blocks placed").ifPresent(stat -> this.handlers.put(stat, new BlockStorage(false)));
         StatManager.getInstance().getStat("Deaths").ifPresent(stat -> this.handlers.put(stat, new DeathStorage()));
         StatManager.getInstance().getStat("Kills").ifPresent(stat -> this.handlers.put(stat, new KillStorage()));
         StatManager.getInstance().getStat("Last join").ifPresent(stat -> this.handlers.put(stat, new LastJoinStorage()));
         StatManager.getInstance().getStat("Last quit").ifPresent(stat -> this.handlers.put(stat, new LastQuitStorage()));
         StatManager.getInstance().getStat("Trades performed").ifPresent(stat -> this.handlers.put(stat, new TradesPerformedStorage()));
-        StatManager.getInstance().getStat("Move").ifPresent(stat -> this.handlers.put(stat, new MoveStorage()));
+//        StatManager.getInstance().getStat("Move").ifPresent(stat -> this.handlers.put(stat, new MoveStorage()));
 
         // Register all other stats to the default
         StatManager.getInstance().getStats().stream()

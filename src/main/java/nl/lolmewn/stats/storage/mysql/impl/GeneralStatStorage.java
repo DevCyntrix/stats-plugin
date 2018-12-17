@@ -31,9 +31,10 @@ public class GeneralStatStorage implements StatMySQLHandler {
                     "  `player` BINARY(16) NOT NULL," +
                     "  `world` BINARY(16) NOT NULL," +
                     "  `amount` DOUBLE NOT NULL," +
-                    "  `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                    "  `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," +
                     "  PRIMARY KEY (`id`)," +
                     "  UNIQUE INDEX `id_UNIQUE` (`id` ASC)," +
+                    "  UNIQUE KEY `rest_UNIQUE` (`player`, `world`)," +
                     "  INDEX `uuid_world` (`player` ASC));");
         }
     }
@@ -41,7 +42,7 @@ public class GeneralStatStorage implements StatMySQLHandler {
     @Override
     public Collection<StatTimeEntry> loadEntries(Connection con, UUID uuid) throws SQLException {
         List<StatTimeEntry> entries = new ArrayList<>();
-        try (PreparedStatement st = con.prepareStatement("SELECT HEX(world) as world_uuid, amount, timestamp " +
+        try (PreparedStatement st = con.prepareStatement("SELECT HEX(world) as world_uuid, amount, last_updated " +
                 "FROM " + getTableName() + " WHERE player=UNHEX(?)")) {
             st.setString(1, uuid.toString().replace("-", ""));
             ResultSet set = st.executeQuery();
@@ -51,7 +52,7 @@ public class GeneralStatStorage implements StatMySQLHandler {
                     throw new IllegalStateException("Found world UUID that is not a UUID: " + set.getString("world_uuid"));
                 }
                 entries.add(new StatTimeEntry(
-                        set.getTimestamp("timestamp").getTime(), set.getDouble("amount"),
+                        set.getTimestamp("last_updated").getTime(), set.getDouble("amount"),
                         Util.of("world", worldUUID.get().toString()
                         )));
             }
@@ -61,12 +62,11 @@ public class GeneralStatStorage implements StatMySQLHandler {
 
     @Override
     public void storeEntry(Connection con, StatsPlayer player, StatsContainer container, StatTimeEntry entry) throws SQLException {
-        try (PreparedStatement st = con.prepareStatement("INSERT INTO " + getTableName() + " (player, world, amount, timestamp) " +
-                "VALUES (UNHEX(?), UNHEX(?), ?, ?)")) {
+        try (PreparedStatement st = con.prepareStatement("INSERT INTO " + getTableName() + " (player, world, amount) " +
+                "VALUES (UNHEX(?), UNHEX(?), ?) ON DUPLICATE KEY UPDATE amount=amount+VALUES(amount)")) {
             st.setString(1, player.getUuid().toString().replace("-", ""));
             st.setString(2, entry.getMetadata().get("world").toString().replace("-", ""));
             st.setDouble(3, entry.getAmount());
-            st.setTimestamp(4, new Timestamp(entry.getTimestamp()));
             st.execute();
         }
     }

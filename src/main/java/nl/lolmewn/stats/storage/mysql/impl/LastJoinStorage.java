@@ -28,7 +28,7 @@ public class LastJoinStorage implements StatMySQLHandler {
     @Override
     public Collection<StatTimeEntry> loadEntries(Connection con, UUID uuid) throws SQLException {
         List<StatTimeEntry> entries = new ArrayList<>();
-        try (PreparedStatement st = con.prepareStatement("SELECT timestamp,HEX(world) as world_uuid FROM stats_last_join WHERE player=UNHEX(?)")) {
+        try (PreparedStatement st = con.prepareStatement("SELECT `timestamp`,HEX(world) as world_uuid FROM stats_last_join WHERE player=UNHEX(?)")) {
             st.setString(1, uuid.toString().replace("-", ""));
             ResultSet set = st.executeQuery();
             while (set != null && set.next()) {
@@ -47,7 +47,7 @@ public class LastJoinStorage implements StatMySQLHandler {
 
     @Override
     public void storeEntry(Connection con, StatsPlayer player, StatsContainer container, StatTimeEntry entry) throws SQLException {
-        try (PreparedStatement st = con.prepareStatement("INSERT INTO stats_last_join (player, world, timestamp) " +
+        try (PreparedStatement st = con.prepareStatement("INSERT INTO stats_last_join (player, world, `timestamp`) " +
                 "VALUES (UNHEX(?), UNHEX(?), ?)")) {
             st.setString(1, player.getUuid().toString().replace("-", ""));
             st.setString(2, entry.getMetadata().get("world").toString().replace("-", ""));

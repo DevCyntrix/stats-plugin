@@ -21,7 +21,7 @@ public class MoveStorage implements StatMySQLHandler {
                     "  `world` BINARY(16) NOT NULL," +
                     "  `amount` DOUBLE NOT NULL," +
                     "  `type` TEXT NOT NULL," +
-                    "  `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                    "  `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," +
                     "  PRIMARY KEY (`id`)," +
                     "  UNIQUE INDEX `id_UNIQUE` (`id` ASC)," +
                     "  INDEX `uuid_world` (`player` ASC));");
@@ -31,7 +31,7 @@ public class MoveStorage implements StatMySQLHandler {
     @Override
     public Collection<StatTimeEntry> loadEntries(Connection con, UUID uuid) throws SQLException {
         List<StatTimeEntry> entries = new ArrayList<>();
-        try (PreparedStatement st = con.prepareStatement("SELECT *,HEX(world) as world_uuid, amount, timestamp " +
+        try (PreparedStatement st = con.prepareStatement("SELECT *,HEX(world) as world_uuid, amount " +
                 "FROM stats_move WHERE player=UNHEX(?)")) {
             st.setString(1, uuid.toString().replace("-", ""));
             ResultSet set = st.executeQuery();
@@ -42,8 +42,9 @@ public class MoveStorage implements StatMySQLHandler {
                 }
                 double amount = set.getDouble("amount");
                 entries.add(new StatTimeEntry(
-                        set.getTimestamp("timestamp").getTime(), amount,
-                        Util.of("world", worldUUID.get().toString(), "type", set.getString("type"))));
+                        set.getTimestamp("last_updated").getTime(), amount,
+                        Util.of("world", worldUUID.get().toString(),
+                                "type", set.getString("type"))));
             }
         }
         return entries;
@@ -58,13 +59,13 @@ public class MoveStorage implements StatMySQLHandler {
             update.setString(3, entry.getMetadata().get("world").toString().replace("-", ""));
             update.setObject(4, entry.getMetadata().get("type"));
             if (update.executeUpdate() == 0) {
-                try (PreparedStatement st = con.prepareStatement("INSERT INTO stats_move (player, world, amount, type) " +
+                try (PreparedStatement insert = con.prepareStatement("INSERT INTO stats_move (player, world, type, amount) " +
                         "VALUES (UNHEX(?), UNHEX(?), ?, ?) ON DUPLICATE KEY UPDATE amount=amount+VALUES(amount)")) {
-                    st.setString(1, player.getUuid().toString().replace("-", ""));
-                    st.setString(2, entry.getMetadata().get("world").toString().replace("-", ""));
-                    st.setDouble(3, entry.getAmount());
-                    st.setObject(4, entry.getMetadata().get("type"));
-                    st.execute();
+                    insert.setString(1, player.getUuid().toString().replace("-", ""));
+                    insert.setString(2, entry.getMetadata().get("world").toString().replace("-", ""));
+                    insert.setObject(3, entry.getMetadata().get("type"));
+                    insert.setDouble(4, entry.getAmount());
+                    insert.execute();
                 }
             }
         }
