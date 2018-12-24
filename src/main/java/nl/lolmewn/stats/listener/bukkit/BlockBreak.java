@@ -38,6 +38,7 @@ public class BlockBreak implements Listener {
         map.put("loc_x", event.getBlock().getLocation().getBlockX());
         map.put("loc_y", event.getBlock().getLocation().getBlockY());
         map.put("loc_z", event.getBlock().getLocation().getBlockZ());
+
         map.put("material", event.getBlock().getType().getKey());
         map.put("tool", event.getPlayer().getInventory().getItemInMainHand().getType().getKey());
         return map;
