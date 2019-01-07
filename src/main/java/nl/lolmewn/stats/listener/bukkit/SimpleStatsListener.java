@@ -65,7 +65,7 @@ public class SimpleStatsListener implements Listener {
         this.addEntry(event.getPlayer().getUniqueId(), "Buckets emptied",
                 new StatTimeEntry(System.currentTimeMillis(), 1,
                         Util.of("world", event.getPlayer().getWorld().getUID().toString(),
-                                "type", event.getBucket().getKey().toString())));
+                                "type", BukkitUtil.getMaterialType(event.getBucket()))));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -105,7 +105,7 @@ public class SimpleStatsListener implements Listener {
         this.addEntry(event.getPlayer().getUniqueId(), "Fish caught",
                 new StatTimeEntry(System.currentTimeMillis(), 1,
                         Util.of("world", event.getPlayer().getWorld().getUID().toString(),
-                                "type", fish.getItemStack().getType().getKey().toString())));
+                                "type", BukkitUtil.getItemType(fish.getItemStack()))));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -113,7 +113,7 @@ public class SimpleStatsListener implements Listener {
         this.addEntry(event.getPlayer().getUniqueId(), "Food consumed",
                 new StatTimeEntry(System.currentTimeMillis(), 1,
                         Util.of("world", event.getPlayer().getWorld().getUID().toString(),
-                                "type", event.getItem().getType().getKey().toString())));
+                                "type", BukkitUtil.getItemType(event.getItem()))));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -124,7 +124,7 @@ public class SimpleStatsListener implements Listener {
         this.addEntry(event.getWhoClicked().getUniqueId(), "Items crafted",
                 new StatTimeEntry(System.currentTimeMillis(), event.getRecipe().getResult().getAmount(),
                         Util.of("world", event.getWhoClicked().getWorld().getUID().toString(),
-                                "type", event.getRecipe().getResult().getType().getKey().toString())));
+                                "type", BukkitUtil.getMaterialType(event.getRecipe().getResult().getType()))));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -132,7 +132,7 @@ public class SimpleStatsListener implements Listener {
         this.addEntry(event.getPlayer().getUniqueId(), "Items dropped",
                 new StatTimeEntry(System.currentTimeMillis(), event.getItemDrop().getItemStack().getAmount(),
                         Util.of("world", event.getPlayer().getWorld().getUID().toString(),
-                                "type", event.getItemDrop().getItemStack().getType().getKey().toString())));
+                                "type", BukkitUtil.getItemType(event.getItemDrop().getItemStack()))));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -143,7 +143,7 @@ public class SimpleStatsListener implements Listener {
         this.addEntry(event.getEntity().getUniqueId(), "Items picked up",
                 new StatTimeEntry(System.currentTimeMillis(), event.getItem().getItemStack().getAmount(),
                         Util.of("world", event.getEntity().getWorld().getUID().toString(),
-                                "type", event.getItem().getItemStack().getType().getKey().toString())));
+                                "type", BukkitUtil.getItemType(event.getItem().getItemStack()))));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -154,62 +154,26 @@ public class SimpleStatsListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     protected void onPlayerJoin(PlayerJoinEvent event) {
-        PlayerManager.getInstance().getPlayer(event.getPlayer().getUniqueId()).subscribe(player -> {
+        PlayerManager.getInstance().getPlayer(event.getPlayer().getUniqueId()).subscribe(player ->
             StatManager.getInstance().getStat("Last join").ifPresent(stat -> {
                 player.getStats(stat).resetWhere("world", event.getPlayer().getWorld().getUID().toString());
                 this.addEntry(event.getPlayer().getUniqueId(), "Last join",
                         new StatTimeEntry(System.currentTimeMillis(), System.currentTimeMillis(), getMetaData(event.getPlayer())));
-            });
-        });
+            })
+        );
         this.addEntry(event.getPlayer().getUniqueId(), "Times joined",
                 new StatTimeEntry(System.currentTimeMillis(), 1, getMetaData(event.getPlayer())));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     protected void onPlayerQuit(PlayerQuitEvent event) {
-        PlayerManager.getInstance().getPlayer(event.getPlayer().getUniqueId()).subscribe(player -> {
+        PlayerManager.getInstance().getPlayer(event.getPlayer().getUniqueId()).subscribe(player ->
             StatManager.getInstance().getStat("Last quit").ifPresent(stat -> {
                 player.getStats(stat).resetWhere("world", event.getPlayer().getWorld().getUID().toString());
                 this.addEntry(event.getPlayer().getUniqueId(), "Last quit",
                         new StatTimeEntry(System.currentTimeMillis(), System.currentTimeMillis(), getMetaData(event.getPlayer())));
-            });
-        });
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    protected void onPlayerMove(PlayerMoveEvent event) {
-        if (event instanceof PlayerTeleportEvent) {
-            return;
-        }
-        if (!event.getFrom().getWorld().equals(event.getTo().getWorld())) {
-            return;
-        }
-        this.addEntry(event.getPlayer().getUniqueId(), "Move",
-                new StatTimeEntry(System.currentTimeMillis(), event.getFrom().distance(event.getTo()),
-                        Util.of("world", event.getFrom().getWorld().getUID().toString(),
-                                "type", getMoveType(event.getPlayer()))));
-    }
-
-    private String getMoveType(Player player) {
-        if (player.isInsideVehicle()) {
-            return player.getVehicle().getType().toString();
-        }
-        if (player.isSwimming()) {
-            return "Swimming";
-        }
-        if (player.isGliding()) {
-            return "Gliding";
-        }
-        if (player.isFlying()) {
-            return "Flying";
-        }
-        if (player.isSprinting()) {
-            return "Sprinting";
-        }
-        if (player.isSneaking()) {
-            return "Sneaking";
-        }
-        return "Walking";
+            })
+        );
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -231,7 +195,7 @@ public class SimpleStatsListener implements Listener {
         this.addEntry(event.getPlayer().getUniqueId(), "Tools broken",
                 new StatTimeEntry(System.currentTimeMillis(), 1,
                         Util.of("world", event.getPlayer().getWorld().getUID().toString(),
-                                "type", event.getBrokenItem().getType().getKey().toString())));
+                                "type", BukkitUtil.getItemType(event.getBrokenItem()))));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

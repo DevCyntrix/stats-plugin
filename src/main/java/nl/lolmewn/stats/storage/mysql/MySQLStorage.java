@@ -111,7 +111,13 @@ public class MySQLStorage extends StorageManager {
     private void storeEntry(StatsPlayer player, StatsContainer container, StatTimeEntry entry) throws SQLException {
         if (this.handlers.containsKey(container.getStat())) {
             try (Connection con = this.getConnection()) {
-                this.handlers.get(container.getStat()).storeEntry(con, player, container, entry);
+                try {
+                    this.handlers.get(container.getStat()).storeEntry(con, player, container, entry);
+                } catch (SQLException ex) {
+                    System.out.printf("Error occurred when trying to save %s data for player %s, full error below.",
+                            container.getStat().getName(), player.getUuid().toString());
+                    throw ex; // rethrow
+                }
             }
         }
     }

@@ -27,16 +27,13 @@ public class TypedStatStorage implements StatMySQLHandler {
     public void generateTables(Connection con) throws SQLException {
         try (Statement st = con.createStatement()) {
             st.execute("CREATE TABLE IF NOT EXISTS `" + getTableName() + "` (" +
-                    "  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT," +
                     "  `player` BINARY(16) NOT NULL," +
                     "  `world` BINARY(16) NOT NULL," +
                     "  `amount` DOUBLE NOT NULL," +
                     "  `type` VARCHAR(255) NOT NULL," +
                     "  `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," +
-                    "  PRIMARY KEY (`id`)," +
-                    "  UNIQUE INDEX `id_UNIQUE` (`id` ASC)," +
-                    "  UNIQUE KEY `rest_UNIQUE` (`player`, `world`, `type`)," +
-                    "  INDEX `uuid_world` (`player` ASC));");
+                    "  PRIMARY KEY (`player`, `world`, `type`)," +
+                    "  INDEX `player_index` (`player` ASC));");
         }
     }
 

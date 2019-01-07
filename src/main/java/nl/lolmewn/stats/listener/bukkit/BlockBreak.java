@@ -1,5 +1,6 @@
 package nl.lolmewn.stats.listener.bukkit;
 
+import nl.lolmewn.stats.BukkitUtil;
 import nl.lolmewn.stats.Util;
 import nl.lolmewn.stats.player.PlayerManager;
 import nl.lolmewn.stats.player.StatTimeEntry;
@@ -35,12 +36,8 @@ public class BlockBreak implements Listener {
     private Map<String, Object> generateMetadata(BlockBreakEvent event) {
         Map<String, Object> map = new HashMap<>();
         map.put("world", event.getBlock().getWorld().getUID().toString());
-        map.put("loc_x", event.getBlock().getLocation().getBlockX());
-        map.put("loc_y", event.getBlock().getLocation().getBlockY());
-        map.put("loc_z", event.getBlock().getLocation().getBlockZ());
-
-        map.put("material", event.getBlock().getType().getKey());
-        map.put("tool", event.getPlayer().getInventory().getItemInMainHand().getType().getKey());
+        map.put("material", BukkitUtil.getMaterialType(event.getBlock().getType()));
+        map.put("tool", BukkitUtil.getItemType(event.getPlayer().getInventory().getItemInMainHand()));
         return map;
     }
 }

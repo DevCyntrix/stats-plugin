@@ -1,5 +1,6 @@
 package nl.lolmewn.stats;
 
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
@@ -15,8 +16,16 @@ public class BukkitUtil {
                 : (stack.getType().name().substring(0, 1) + stack.getType().name().substring(1).toLowerCase().replace("_", " ")));
     }
 
+    public static String getItemType(ItemStack stack) {
+        return getMaterialType(stack.getType());
+    }
+
+    public static String getMaterialType(Material material) {
+        return "minecraft:" + material.name().toLowerCase();
+    }
+
     public static SimpleItem getSimpleItem(ItemStack stack) {
-        return new SimpleItem(stack.getType().getKey(), stack.getAmount());
+        return new SimpleItem(getItemType(stack), stack.getAmount());
     }
 
     public static List<SimpleItem> getSimpleItems(List<ItemStack> ingredients) {

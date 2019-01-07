@@ -64,6 +64,7 @@ public class BukkitMain extends JavaPlugin {
         new BlockPlace(this);
         new PlayerDeath(this);
         new EntityDeath(this);
+        new PlayerMove(this);
         new Playtime();
         new SimpleStatsListener(this);
 

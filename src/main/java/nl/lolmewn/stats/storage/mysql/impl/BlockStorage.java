@@ -11,9 +11,11 @@ import java.util.*;
 
 public class BlockStorage implements StatMySQLHandler {
 
+    private final boolean breaking;
     private final String tableName;
 
     public BlockStorage(boolean breaking) {
+        this.breaking = breaking;
         this.tableName = breaking ? "stats_block_break" : "stats_block_place";
     }
 
@@ -25,12 +27,12 @@ public class BlockStorage implements StatMySQLHandler {
                     "  `player` BINARY(16) NOT NULL," +
                     "  `world` BINARY(16) NOT NULL," +
                     "  `material` VARCHAR(255) NOT NULL," +
-                    "  `tool` VARCHAR(255) NOT NULL," +
+                    (breaking ? "  `tool` VARCHAR(255) NOT NULL," : "") +
                     "  `amount` DOUBLE NOT NULL," +
                     "  `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," +
                     "  PRIMARY KEY (`id`)," +
                     "  UNIQUE INDEX `id_UNIQUE` (`id` ASC)," +
-                    "  UNIQUE KEY `rest_UNIQUE` (`player`,`world`,`material`,`tool`)," +
+                    "  UNIQUE KEY `rest_UNIQUE` (`player`,`world`,`material`" + (breaking ? ",`tool`" : "") + ")," +
                     "  INDEX `uuid` (`player` ASC));");
         }
     }
@@ -46,12 +48,20 @@ public class BlockStorage implements StatMySQLHandler {
                 if (!worldUUID.isPresent()) {
                     throw new IllegalStateException("Found world UUID that is not a UUID: " + set.getString("world_uuid"));
                 }
-                entries.add(new StatTimeEntry(
-                        set.getTimestamp("last_updated").getTime(), set.getDouble("amount"),
-                        Util.of("world", worldUUID.get().toString(),
-                                "material", set.getString("material"),
-                                "tool", set.getString("tool"))
-                ));
+                if (breaking) {
+                    entries.add(new StatTimeEntry(
+                            set.getTimestamp("last_updated").getTime(), set.getDouble("amount"),
+                            Util.of("world", worldUUID.get().toString(),
+                                    "material", set.getString("material"),
+                                    "tool", set.getString("tool"))
+                    ));
+                } else {
+                    entries.add(new StatTimeEntry(
+                            set.getTimestamp("last_updated").getTime(), set.getDouble("amount"),
+                            Util.of("world", worldUUID.get().toString(),
+                                    "material", set.getString("material"))
+                    ));
+                }
             }
         }
         return entries;
@@ -59,14 +69,27 @@ public class BlockStorage implements StatMySQLHandler {
 
     @Override
     public void storeEntry(Connection con, StatsPlayer player, StatsContainer container, StatTimeEntry entry) throws SQLException {
-        try (PreparedStatement st = con.prepareStatement("INSERT INTO " + this.tableName + " (player, world, material, tool, amount) " +
-                "VALUES (UNHEX(?), UNHEX(?), ?, ?, ?) ON DUPLICATE KEY UPDATE amount=amount+VALUES(amount)")) {
-            st.setString(1, player.getUuid().toString().replace("-", ""));
-            st.setString(2, entry.getMetadata().get("world").toString().replace("-", ""));
-            st.setObject(3, entry.getMetadata().get("material"));
-            st.setObject(4, entry.getMetadata().get("tool"));
-            st.setDouble(5, entry.getAmount());
-            st.execute();
+        if (breaking) {
+            try (PreparedStatement st = con.prepareStatement("INSERT INTO " + this.tableName + " (player, world, material, tool, amount) " +
+                    "VALUES (UNHEX(?), UNHEX(?), ?, ?, ?) ON DUPLICATE KEY UPDATE amount=amount+VALUES(amount)")) {
+                inputCommon(player, entry, st);
+                st.setObject(4, entry.getMetadata().get("tool"));
+                st.setDouble(5, entry.getAmount());
+                st.execute();
+            }
+        } else {
+            try (PreparedStatement st = con.prepareStatement("INSERT INTO " + this.tableName + " (player, world, material, amount) " +
+                    "VALUES (UNHEX(?), UNHEX(?), ?, ?) ON DUPLICATE KEY UPDATE amount=amount+VALUES(amount)")) {
+                inputCommon(player, entry, st);
+                st.setDouble(4, entry.getAmount());
+                st.execute();
+            }
         }
+    }
+
+    private void inputCommon(StatsPlayer player, StatTimeEntry entry, PreparedStatement st) throws SQLException {
+        st.setString(1, player.getUuid().toString().replace("-", ""));
+        st.setString(2, entry.getMetadata().get("world").toString().replace("-", ""));
+        st.setObject(3, entry.getMetadata().get("material"));
     }
 }

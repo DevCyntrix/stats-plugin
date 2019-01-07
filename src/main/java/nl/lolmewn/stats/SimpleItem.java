@@ -1,13 +1,11 @@
 package nl.lolmewn.stats;
 
-import org.bukkit.NamespacedKey;
-
 public class SimpleItem {
 
-    private final NamespacedKey key;
+    private final String key;
     private final int amount;
 
-    public SimpleItem(NamespacedKey key, int amount) {
+    public SimpleItem(String key, int amount) {
         this.key = key;
         this.amount = amount;
     }
@@ -16,7 +14,7 @@ public class SimpleItem {
         return amount;
     }
 
-    public NamespacedKey getKey() {
+    public String getType() {
         return key;
     }
 }
