@@ -16,15 +16,15 @@ public class GeneralDefaultStorage implements MySQLHandler {
                     "  `username` VARCHAR(16) NOT NULL DEFAULT 'Unknown'," +
                     "  PRIMARY KEY (`id`)," +
                     "  UNIQUE INDEX `uuid_UNIQUE` (`uuid` ASC));");
-            st.execute("CREATE TABLE IF NOT EXISTS `stats_worlds` (" +
-                    "  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT," +
-                    "  `uuid` BINARY(16) NOT NULL," +
-                    "  `name` TEXT NOT NULL," +
-                    "  `raining` BOOLEAN NOT NULL," +
-                    "  PRIMARY KEY (`id`)," +
-                    "  UNIQUE INDEX `uuid_UNIQUE` (`uuid` ASC));");
-            st.execute("CREATE TABLE IF NOT EXISTS `stats_system` (" +
-                    " `version` INT UNSIGNED NOT NULL)");
+//            st.execute("CREATE TABLE IF NOT EXISTS `stats_worlds` (" +
+//                    "  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT," +
+//                    "  `uuid` BINARY(16) NOT NULL," +
+//                    "  `name` TEXT NOT NULL," +
+//                    "  `raining` BOOLEAN NOT NULL," +
+//                    "  PRIMARY KEY (`id`)," +
+//                    "  UNIQUE INDEX `uuid_UNIQUE` (`uuid` ASC));");
+//            st.execute("CREATE TABLE IF NOT EXISTS `stats_system` (" +
+//                    " `version` INT UNSIGNED NOT NULL)");
         }
     }
 }
