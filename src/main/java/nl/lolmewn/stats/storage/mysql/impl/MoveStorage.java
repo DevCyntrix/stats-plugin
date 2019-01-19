@@ -1,9 +1,9 @@
 package nl.lolmewn.stats.storage.mysql.impl;
 
 import nl.lolmewn.stats.Util;
+import nl.lolmewn.stats.player.MySQLStatsPlayer;
 import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.player.StatsContainer;
-import nl.lolmewn.stats.player.StatsPlayer;
 import nl.lolmewn.stats.storage.mysql.StatMySQLHandler;
 
 import java.sql.*;
@@ -51,7 +51,7 @@ public class MoveStorage implements StatMySQLHandler {
     }
 
     @Override
-    public void storeEntry(Connection con, StatsPlayer player, StatsContainer container, StatTimeEntry entry) throws SQLException {
+    public void storeEntry(Connection con, MySQLStatsPlayer player, StatsContainer container, StatTimeEntry entry) throws SQLException {
         try (PreparedStatement update = con.prepareStatement("UPDATE stats_move SET amount=amount+? " +
                 "WHERE player=UNHEX(?) AND world=UNHEX(?) AND type=?")) {
             update.setDouble(1, entry.getAmount());

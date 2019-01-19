@@ -31,8 +31,11 @@ public class GlobalStats {
         try {
             setupRabbitMq();
             this.disposable.add(PlayerManager.getInstance().subscribe(this.getPlayerConsumer(), Util::handleError));
-        } catch (IOException | TimeoutException e) {
-            e.printStackTrace();
+        } catch (IOException | TimeoutException ignored) {
+            System.err.println("Could not set up connection to Global Stats server.");
+            System.err.println("Please report this issue to the developer of Stats.");
+            System.err.println("( https://gitlab.com/lolmewn/stats-plugin/issues )");
+//            e.printStackTrace();
         }
     }
 
@@ -86,8 +89,9 @@ public class GlobalStats {
         try {
             this.channel.close();
             this.rabbitMqConnection.close();
-        } catch (IOException | TimeoutException e) {
-            e.printStackTrace();
+        } catch (IOException | TimeoutException ignored) {
+            // Fail silently
+//            e.printStackTrace();
         }
     }
 }

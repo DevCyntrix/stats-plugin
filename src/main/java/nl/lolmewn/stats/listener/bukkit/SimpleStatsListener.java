@@ -1,12 +1,12 @@
 package nl.lolmewn.stats.listener.bukkit;
 
 import io.reactivex.disposables.Disposable;
+import nl.lolmewn.stats.BukkitMain;
 import nl.lolmewn.stats.BukkitUtil;
 import nl.lolmewn.stats.Util;
 import nl.lolmewn.stats.player.PlayerManager;
 import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.stat.StatManager;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -22,15 +22,17 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.MerchantInventory;
-import org.bukkit.plugin.Plugin;
 
 import java.util.Map;
 import java.util.UUID;
 
 public class SimpleStatsListener implements Listener {
 
-    public SimpleStatsListener(Plugin plugin) {
-        Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
+    private final BukkitMain plugin;
+
+    public SimpleStatsListener(BukkitMain plugin) {
+        this.plugin = plugin;
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     private Disposable addEntry(UUID uuid, String statName, StatTimeEntry entry) {
@@ -163,6 +165,7 @@ public class SimpleStatsListener implements Listener {
         );
         this.addEntry(event.getPlayer().getUniqueId(), "Times joined",
                 new StatTimeEntry(System.currentTimeMillis(), 1, getMetaData(event.getPlayer())));
+        updateDatabase(event.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -232,5 +235,9 @@ public class SimpleStatsListener implements Listener {
     public void event(PlayerExpChangeEvent event) {
         this.addEntry(event.getPlayer().getUniqueId(), "XP gained",
                 new StatTimeEntry(System.currentTimeMillis(), event.getAmount(), getMetaData(event.getPlayer())));
+    }
+
+    private void updateDatabase(Player player) {
+        plugin.getMySQLStorage().onPlayerJoin(player.getUniqueId(), player.getName());
     }
 }

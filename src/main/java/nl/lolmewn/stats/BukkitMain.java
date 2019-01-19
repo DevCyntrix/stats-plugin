@@ -29,6 +29,7 @@ import java.util.UUID;
 public class BukkitMain extends JavaPlugin {
 
     private GlobalStats globalStats;
+    private MySQLStorage storage;
 
     @Override
     public void onEnable() {
@@ -53,7 +54,7 @@ public class BukkitMain extends JavaPlugin {
         SharedMain.registerStats();
 
         try {
-            new MySQLStorage(this.getMySQLConfig());
+            this.storage = new MySQLStorage(this.getMySQLConfig());
         } catch (SQLException e) {
             e.printStackTrace();
             this.getLogger().severe("Could not start MySQL, not starting plugin.");
@@ -103,6 +104,7 @@ public class BukkitMain extends JavaPlugin {
     @Override
     public void onDisable() {
         if (this.globalStats != null) this.globalStats.shutdown();
+        if (this.storage != null) this.storage.shutdown();
     }
 
     @Override
@@ -146,5 +148,9 @@ public class BukkitMain extends JavaPlugin {
                 .filter(e -> e.getKey().containsKey(metadataKey))
                 .forEach(e -> results.merge(e.getKey().get(metadataKey).toString(), e.getValue(), Double::sum));
         return results;
+    }
+
+    public MySQLStorage getMySQLStorage() {
+        return this.storage;
     }
 }

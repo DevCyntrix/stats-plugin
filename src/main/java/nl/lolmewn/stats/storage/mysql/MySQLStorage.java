@@ -7,28 +7,28 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import nl.lolmewn.stats.Util;
-import nl.lolmewn.stats.player.PlayerManager;
-import nl.lolmewn.stats.player.StatTimeEntry;
-import nl.lolmewn.stats.player.StatsContainer;
-import nl.lolmewn.stats.player.StatsPlayer;
+import nl.lolmewn.stats.player.*;
 import nl.lolmewn.stats.stat.Stat;
 import nl.lolmewn.stats.stat.StatManager;
 import nl.lolmewn.stats.storage.StorageManager;
 import nl.lolmewn.stats.storage.mysql.impl.*;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.Callable;
 
 public class MySQLStorage extends StorageManager {
 
     private final HikariDataSource dataSource;
+    private Map<String, MySQLHandler> standardHandlers = new HashMap<>();
     private Map<Stat, StatMySQLHandler> handlers = new HashMap<>();
-    private final CompositeDisposable disposable = new CompositeDisposable();
+    private CompositeDisposable disposable;
 
     public MySQLStorage(MySQLConfig config) throws SQLException {
         System.out.println("Starting MySQL Storage Engine...");
+        this.disposable = new CompositeDisposable();
         HikariConfig hcnf = new HikariConfig();
         hcnf.setJdbcUrl(config.getJdbcUrl());
         hcnf.setUsername(config.getUsername());
@@ -46,6 +46,11 @@ public class MySQLStorage extends StorageManager {
         this.checkTableUpgrades();
         System.out.println("MySQL ready to go!");
         this.disposable.add(PlayerManager.getInstance().subscribe(this.getPlayerConsumer(), Util::handleError));
+    }
+
+    public void shutdown() {
+        if (this.disposable != null && !this.disposable.isDisposed()) this.disposable.dispose();
+        if (this.dataSource != null && this.dataSource.isRunning()) this.dataSource.close();
     }
 
     private void checkTableUpgrades() {
@@ -73,12 +78,18 @@ public class MySQLStorage extends StorageManager {
     }
 
     private Consumer<StatTimeEntry> getStatTimeEntryConsumer(StatsPlayer player, StatsContainer statsContainer) {
+        if (!(player instanceof MySQLStatsPlayer)) {
+            return null;
+        }
         return statTimeEntry -> this.disposable.add(Flowable.just(statTimeEntry).subscribeOn(Schedulers.io())
-                .subscribe((entry) -> this.storeEntry(player, statsContainer, entry), Util::handleError));
+                .subscribe((entry) -> this.storeEntry((MySQLStatsPlayer) player, statsContainer, entry), Util::handleError));
 //        return statTimeEntry -> this.storeEntry(player, statsContainer, statTimeEntry);
     }
     private void generateTables() throws SQLException {
         try (Connection con = getConnection()) {
+            for (MySQLHandler handler : this.standardHandlers.values()) {
+                handler.generateTables(con);
+            }
             for (StatMySQLHandler handler : this.handlers.values()) {
                 handler.generateTables(con);
             }
@@ -86,6 +97,7 @@ public class MySQLStorage extends StorageManager {
     }
 
     private void registerHandlers() {
+        this.standardHandlers.put("general", new GeneralDefaultStorage());
 //        StatManager.getInstance().getStat("Playtime").ifPresent(stat -> this.handlers.put(stat, new PlaytimeStorage()));
         StatManager.getInstance().getStat("Blocks broken").ifPresent(stat -> this.handlers.put(stat, new BlockStorage(true)));
         StatManager.getInstance().getStat("Blocks placed").ifPresent(stat -> this.handlers.put(stat, new BlockStorage(false)));
@@ -108,7 +120,7 @@ public class MySQLStorage extends StorageManager {
                 });
     }
 
-    private void storeEntry(StatsPlayer player, StatsContainer container, StatTimeEntry entry) throws SQLException {
+    private void storeEntry(MySQLStatsPlayer player, StatsContainer container, StatTimeEntry entry) throws SQLException {
         if (this.handlers.containsKey(container.getStat())) {
             try (Connection con = this.getConnection()) {
                 try {
@@ -122,7 +134,7 @@ public class MySQLStorage extends StorageManager {
         }
     }
 
-    public void checkConnection() throws SQLException {
+    private void checkConnection() throws SQLException {
         try (Connection con = getConnection()) {
             con.createStatement().execute("SELECT 1");
         }
@@ -133,13 +145,59 @@ public class MySQLStorage extends StorageManager {
     }
 
     @Override
+    public Callable<StatsPlayer> loadPlayer(UUID uuid) {
+        return () -> {
+            StatsPlayer statsPlayer = new MySQLStatsPlayer(uuid);
+            this.internalLoadPlayer(statsPlayer);
+            return statsPlayer;
+        };
+    }
+
+    @Override
     public void internalLoadPlayer(StatsPlayer player) {
+        if (!(player instanceof MySQLStatsPlayer)) {
+            throw new IllegalArgumentException("Supplied StatsPlayer is not a MySQLStatsPlayer");
+        }
         try (Connection con = this.getConnection()) {
+            this.loadPlayerId(con, (MySQLStatsPlayer) player);
             for (Map.Entry<Stat, StatMySQLHandler> mapEntry : this.handlers.entrySet()) {
                 for (StatTimeEntry entry : mapEntry.getValue().loadEntries(con, player.getUuid())) {
                     player.getStats(mapEntry.getKey()).addEntry(entry);
                 }
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadPlayerId(Connection con, MySQLStatsPlayer player) throws SQLException {
+        try (PreparedStatement st = con.prepareStatement("SELECT id FROM stats_players WHERE uuid=UNHEX(?)")) {
+            st.setString(1, player.getUuid().toString().replace("-", ""));
+            ResultSet set = st.executeQuery();
+            if (set != null && set.next()) {
+                player.setDbId(set.getInt("id"));
+                return;
+            }
+            // No player, insert and get generated id
+            PreparedStatement insert =
+                    con.prepareStatement("INSERT INTO stats_players (uuid) VALUE (UNHEX(?))", Statement.RETURN_GENERATED_KEYS);
+            insert.setString(1, player.getUuid().toString().replace("-", ""));
+            insert.execute();
+            ResultSet generated = insert.getGeneratedKeys();
+            if (generated != null && generated.next()) {
+                player.setDbId(generated.getInt(1));
+                return;
+            }
+            throw new IllegalStateException("No player exists but player ID could not be generated either");
+        }
+    }
+
+    public void onPlayerJoin(UUID uniqueId, String name) {
+        try (Connection con = this.getConnection()) {
+            PreparedStatement st = con.prepareStatement("UPDATE stats_players SET username=? WHERE uuid=UNHEX(?)");
+            st.setString(1, name);
+            st.setString(2, uniqueId.toString().replace("-", ""));
+            st.execute();
         } catch (SQLException e) {
             e.printStackTrace();
         }

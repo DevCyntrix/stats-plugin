@@ -1,9 +1,9 @@
 package nl.lolmewn.stats.storage.mysql.impl;
 
 import nl.lolmewn.stats.Util;
+import nl.lolmewn.stats.player.MySQLStatsPlayer;
 import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.player.StatsContainer;
-import nl.lolmewn.stats.player.StatsPlayer;
 import nl.lolmewn.stats.storage.mysql.StatMySQLHandler;
 
 import java.sql.*;
@@ -46,7 +46,7 @@ public class LastJoinStorage implements StatMySQLHandler {
     }
 
     @Override
-    public void storeEntry(Connection con, StatsPlayer player, StatsContainer container, StatTimeEntry entry) throws SQLException {
+    public void storeEntry(Connection con, MySQLStatsPlayer player, StatsContainer container, StatTimeEntry entry) throws SQLException {
         try (PreparedStatement st = con.prepareStatement("INSERT INTO stats_last_join (player, world, `timestamp`) " +
                 "VALUES (UNHEX(?), UNHEX(?), ?)")) {
             st.setString(1, player.getUuid().toString().replace("-", ""));
