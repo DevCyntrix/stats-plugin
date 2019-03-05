@@ -24,10 +24,12 @@ public class GlobalStats {
     private static final String routingKey = "stats.global";
     private final Gson gson = new Gson();
     private final CompositeDisposable disposable = new CompositeDisposable();
+    private final String version;
     private Connection rabbitMqConnection;
     private Channel channel;
 
-    public GlobalStats() {
+    public GlobalStats(String version) {
+        this.version = version;
         try {
             setupRabbitMq();
             this.disposable.add(PlayerManager.getInstance().subscribe(this.getPlayerConsumer(), Util::handleError));
@@ -66,7 +68,8 @@ public class GlobalStats {
                             "metadata", statTimeEntry.getMetadata(),
                             "timestamp", statTimeEntry.getTimestamp()
                     ),
-                    "stat", statsContainer.getStat().getName()
+                    "stat", statsContainer.getStat().getName(),
+                    "version", this.version
             ));
             SharedMain.debug("Publishing " + message);
             this.channel.basicPublish("", routingKey, null, message.getBytes());
@@ -78,7 +81,7 @@ public class GlobalStats {
         factory.setAutomaticRecoveryEnabled(true);
         factory.setUsername("stats5");
         factory.setPassword("stats5");
-        factory.setHost("lolmewn.nl");
+        factory.setHost("localhost");
         factory.setPort(5672);
         this.rabbitMqConnection = factory.newConnection();
         this.channel = this.rabbitMqConnection.createChannel();

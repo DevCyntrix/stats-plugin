@@ -28,7 +28,7 @@ public class SpongeMain {
         new Playtime();
         new BlockBreak(this);
 
-        this.globalStats = new GlobalStats();
+        this.globalStats = new GlobalStats("v5.3");
         SharedMain.serverUuid = UUID.randomUUID().toString(); // todo
     }
 

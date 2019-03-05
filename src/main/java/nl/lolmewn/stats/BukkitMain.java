@@ -72,7 +72,7 @@ public class BukkitMain extends JavaPlugin {
         SharedMain.serverUuid = super.getConfig().getString("server-id");
         SharedMain.setDebug(super.getConfig().getBoolean("debug", false));
         if (!super.getConfig().getBoolean("global-stats-opt-out", false)) {
-            this.globalStats = new GlobalStats();
+            this.globalStats = new GlobalStats(super.getConfig().getString("version", "v5.3"));
         }
     }
 
