@@ -7,7 +7,10 @@ import nl.lolmewn.stats.player.StatsContainer;
 import nl.lolmewn.stats.stat.Stat;
 import nl.lolmewn.stats.storage.mysql.StatMySQLHandler;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
 @SuppressWarnings("SqlResolve")
@@ -21,20 +24,6 @@ public class TypedStatStorage implements StatMySQLHandler {
 
     private String getTableName() {
         return "stats_" + this.stat.getName().toLowerCase().replace(" ", "_");
-    }
-
-    @Override
-    public void generateTables(Connection con) throws SQLException {
-        try (Statement st = con.createStatement()) {
-            st.execute("CREATE TABLE IF NOT EXISTS `" + getTableName() + "` (" +
-                    "  `player` BINARY(16) NOT NULL," +
-                    "  `world` BINARY(16) NOT NULL," +
-                    "  `amount` DOUBLE NOT NULL," +
-                    "  `type` VARCHAR(255) NOT NULL," +
-                    "  `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," +
-                    "  PRIMARY KEY (`player`, `world`, `type`)," +
-                    "  INDEX `player_index` (`player` ASC));");
-        }
     }
 
     @Override

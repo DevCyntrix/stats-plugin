@@ -7,7 +7,10 @@ import nl.lolmewn.stats.player.StatsContainer;
 import nl.lolmewn.stats.player.StatsPlayer;
 import nl.lolmewn.stats.storage.mysql.StatMySQLHandler;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
 public class BlockStorage implements StatMySQLHandler {
@@ -18,24 +21,6 @@ public class BlockStorage implements StatMySQLHandler {
     public BlockStorage(boolean breaking) {
         this.breaking = breaking;
         this.tableName = breaking ? "stats_block_break" : "stats_block_place";
-    }
-
-    @Override
-    public void generateTables(Connection con) throws SQLException {
-        try (Statement st = con.createStatement()) {
-            st.execute("CREATE TABLE IF NOT EXISTS `" + this.tableName + "` (" +
-                    "  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT," +
-                    "  `player` BINARY(16) NOT NULL," +
-                    "  `world` BINARY(16) NOT NULL," +
-                    "  `material` VARCHAR(255) NOT NULL," +
-                    (breaking ? "  `tool` VARCHAR(255) NOT NULL," : "") +
-                    "  `amount` DOUBLE NOT NULL," +
-                    "  `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," +
-                    "  PRIMARY KEY (`id`)," +
-                    "  UNIQUE INDEX `id_UNIQUE` (`id` ASC)," +
-                    "  UNIQUE KEY `rest_UNIQUE` (`player`,`world`,`material`" + (breaking ? ",`tool`" : "") + ")," +
-                    "  INDEX `uuid` (`player` ASC));");
-        }
     }
 
     @Override

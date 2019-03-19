@@ -7,7 +7,10 @@ import nl.lolmewn.stats.player.StatsContainer;
 import nl.lolmewn.stats.stat.Stat;
 import nl.lolmewn.stats.storage.mysql.StatMySQLHandler;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
 @SuppressWarnings("SqlResolve")
@@ -21,22 +24,6 @@ public class GeneralStatStorage implements StatMySQLHandler {
 
     private String getTableName() {
         return "stats_" + this.stat.getName().toLowerCase().replace(" ", "_");
-    }
-
-    @Override
-    public void generateTables(Connection con) throws SQLException {
-        try (Statement st = con.createStatement()) {
-            st.execute("CREATE TABLE IF NOT EXISTS `" + getTableName() + "` (" +
-                    "  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT," +
-                    "  `player` BINARY(16) NOT NULL," +
-                    "  `world` BINARY(16) NOT NULL," +
-                    "  `amount` DOUBLE NOT NULL," +
-                    "  `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," +
-                    "  PRIMARY KEY (`id`)," +
-                    "  UNIQUE INDEX `id_UNIQUE` (`id` ASC)," +
-                    "  UNIQUE KEY `rest_UNIQUE` (`player`, `world`)," +
-                    "  INDEX `uuid_world` (`player` ASC));");
-        }
     }
 
     @Override

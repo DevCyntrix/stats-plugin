@@ -12,20 +12,6 @@ import java.util.*;
 public class LastQuitStorage implements StatMySQLHandler {
 
     @Override
-    public void generateTables(Connection con) throws SQLException {
-        try (Statement st = con.createStatement()) {
-            st.execute("CREATE TABLE IF NOT EXISTS `stats_last_quit` (" +
-                    "  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT," +
-                    "  `player` BINARY(16) NOT NULL," +
-                    "  `world` BINARY(16) NOT NULL," +
-                    "  `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," +
-                    "  PRIMARY KEY (`id`)," +
-                    "  UNIQUE INDEX `id_UNIQUE` (`id` ASC)," +
-                    "  INDEX `uuid` (`player` ASC));");
-        }
-    }
-
-    @Override
     public Collection<StatTimeEntry> loadEntries(Connection con, UUID uuid) throws SQLException {
         List<StatTimeEntry> entries = new ArrayList<>();
         try (PreparedStatement st = con.prepareStatement("SELECT `timestamp`,HEX(world) as world_uuid FROM stats_last_quit WHERE player=UNHEX(?)")) {

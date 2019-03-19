@@ -21,6 +21,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.TreeMap;
@@ -55,9 +56,10 @@ public class BukkitMain extends JavaPlugin {
 
         try {
             this.storage = new MySQLStorage(this.getMySQLConfig());
-        } catch (SQLException e) {
+        } catch (SQLException | IOException e) {
             e.printStackTrace();
             this.getLogger().severe("Could not start MySQL, not starting plugin.");
+            getServer().getPluginManager().disablePlugin(this);
             return;
         }
 

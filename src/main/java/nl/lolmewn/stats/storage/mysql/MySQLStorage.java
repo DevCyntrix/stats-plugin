@@ -12,7 +12,9 @@ import nl.lolmewn.stats.stat.Stat;
 import nl.lolmewn.stats.stat.StatManager;
 import nl.lolmewn.stats.storage.StorageManager;
 import nl.lolmewn.stats.storage.mysql.impl.*;
+import nl.lolmewn.stats.storage.mysql.upgrade.MySQLUpgrader;
 
+import java.io.IOException;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,11 +24,10 @@ import java.util.concurrent.Callable;
 public class MySQLStorage extends StorageManager {
 
     private final HikariDataSource dataSource;
-    private Map<String, MySQLHandler> standardHandlers = new HashMap<>();
     private Map<Stat, StatMySQLHandler> handlers = new HashMap<>();
     private CompositeDisposable disposable;
 
-    public MySQLStorage(MySQLConfig config) throws SQLException {
+    public MySQLStorage(MySQLConfig config) throws SQLException, IOException {
         System.out.println("Starting MySQL Storage Engine...");
         this.disposable = new CompositeDisposable();
         HikariConfig hcnf = new HikariConfig();
@@ -42,7 +43,6 @@ public class MySQLStorage extends StorageManager {
         }
 
         this.registerHandlers();
-        this.generateTables();
         this.checkTableUpgrades();
         System.out.println("MySQL ready to go!");
         this.disposable.add(PlayerManager.getInstance().subscribe(this.getPlayerConsumer(), Util::handleError));
@@ -53,11 +53,9 @@ public class MySQLStorage extends StorageManager {
         if (this.dataSource != null && this.dataSource.isRunning()) this.dataSource.close();
     }
 
-    private void checkTableUpgrades() {
+    private void checkTableUpgrades() throws SQLException, IOException {
         try (Connection con = this.getConnection()) {
-            new MySQLUpgradeChecker(con);
-        } catch (SQLException e) {
-            e.printStackTrace();
+            new MySQLUpgrader(con);
         }
     }
 
@@ -83,22 +81,9 @@ public class MySQLStorage extends StorageManager {
         }
         return statTimeEntry -> this.disposable.add(Flowable.just(statTimeEntry).subscribeOn(Schedulers.io())
                 .subscribe((entry) -> this.storeEntry((MySQLStatsPlayer) player, statsContainer, entry), Util::handleError));
-//        return statTimeEntry -> this.storeEntry(player, statsContainer, statTimeEntry);
-    }
-    private void generateTables() throws SQLException {
-        try (Connection con = getConnection()) {
-            for (MySQLHandler handler : this.standardHandlers.values()) {
-                handler.generateTables(con);
-            }
-            for (StatMySQLHandler handler : this.handlers.values()) {
-                handler.generateTables(con);
-            }
-        }
     }
 
     private void registerHandlers() {
-        this.standardHandlers.put("general", new GeneralDefaultStorage());
-//        StatManager.getInstance().getStat("Playtime").ifPresent(stat -> this.handlers.put(stat, new PlaytimeStorage()));
         StatManager.getInstance().getStat("Blocks broken").ifPresent(stat -> this.handlers.put(stat, new BlockStorage(true)));
         StatManager.getInstance().getStat("Blocks placed").ifPresent(stat -> this.handlers.put(stat, new BlockStorage(false)));
         StatManager.getInstance().getStat("Deaths").ifPresent(stat -> this.handlers.put(stat, new DeathStorage()));
@@ -106,7 +91,6 @@ public class MySQLStorage extends StorageManager {
         StatManager.getInstance().getStat("Last join").ifPresent(stat -> this.handlers.put(stat, new LastJoinStorage()));
         StatManager.getInstance().getStat("Last quit").ifPresent(stat -> this.handlers.put(stat, new LastQuitStorage()));
         StatManager.getInstance().getStat("Trades performed").ifPresent(stat -> this.handlers.put(stat, new TradesPerformedStorage()));
-//        StatManager.getInstance().getStat("Move").ifPresent(stat -> this.handlers.put(stat, new MoveStorage()));
 
         // Register all other stats to the default
         StatManager.getInstance().getStats().stream()

@@ -17,22 +17,6 @@ public class TradesPerformedStorage implements StatMySQLHandler {
     private final Gson gson = new Gson();
 
     @Override
-    public void generateTables(Connection con) throws SQLException {
-        try (Statement st = con.createStatement()) {
-            st.execute("CREATE TABLE IF NOT EXISTS `stats_trades_performed` (" +
-                    "  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT," +
-                    "  `player` BINARY(16) NOT NULL," +
-                    "  `world` BINARY(16) NOT NULL," +
-                    "  `item` TEXT NOT NULL," +
-                    "  `price` TEXT NOT NULL," +
-                    "  `timestamp` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," +
-                    "  PRIMARY KEY (`id`)," +
-                    "  UNIQUE INDEX `id_UNIQUE` (`id` ASC)," +
-                    "  INDEX `uuid` (`player` ASC));");
-        }
-    }
-
-    @Override
     public Collection<StatTimeEntry> loadEntries(Connection con, UUID uuid) throws SQLException {
         List<StatTimeEntry> entries = new ArrayList<>();
         try (PreparedStatement st = con.prepareStatement("SELECT *,HEX(world) as world_uuid FROM stats_trades_performed WHERE player=UNHEX(?)")) {

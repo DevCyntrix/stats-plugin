@@ -6,28 +6,13 @@ import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.player.StatsContainer;
 import nl.lolmewn.stats.storage.mysql.StatMySQLHandler;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
 public class KillStorage implements StatMySQLHandler {
-    @Override
-    public void generateTables(Connection con) throws SQLException {
-        try (Statement st = con.createStatement()) {
-            st.execute("CREATE TABLE IF NOT EXISTS `stats_kill` (" +
-                    "  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT," +
-                    "  `player` BINARY(16) NOT NULL," +
-                    "  `world` BINARY(16) NOT NULL," +
-                    "  `victimType` VARCHAR(64) NOT NULL," +
-                    "  `victimName` VARCHAR(64) NOT NULL," +
-                    "  `weapon` VARCHAR(128) NOT NULL," +
-                    "  `amount` DOUBLE NOT NULL," +
-                    "  `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," +
-                    "  PRIMARY KEY (`id`)," +
-                    "  UNIQUE INDEX `id_UNIQUE` (`id` ASC)," +
-                    "  UNIQUE KEY `rest_UNIQUE` (`player`, `world`, `victimType`, `victimName`, `weapon`)," +
-                    "  INDEX `uuid` (`player` ASC));");
-        }
-    }
 
     @Override
     public Collection<StatTimeEntry> loadEntries(Connection con, UUID uuid) throws SQLException {

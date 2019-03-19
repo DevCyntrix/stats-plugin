@@ -9,7 +9,7 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.UUID;
 
-public interface StatMySQLHandler extends MySQLHandler {
+public interface StatMySQLHandler {
 
     Collection<StatTimeEntry> loadEntries(Connection con, UUID uuid) throws SQLException;
 
