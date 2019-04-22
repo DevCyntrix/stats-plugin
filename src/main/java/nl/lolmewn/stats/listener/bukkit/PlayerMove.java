@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayerMove implements Listener, Runnable {
 
-    private Map<PlayerMoveCache, Double> cacheMap = new ConcurrentHashMap<>();
+    private Map<String, Double> cacheMap = new ConcurrentHashMap<>();
 
     public PlayerMove(JavaPlugin plugin) {
         Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
@@ -35,9 +35,10 @@ public class PlayerMove implements Listener, Runnable {
             return;
         }
         double distance = event.getFrom().distance(event.getTo());
-        PlayerMoveCache cache = new PlayerMoveCache(event.getPlayer().getUniqueId(),
-                event.getFrom().getWorld().getUID(), getMoveType(event.getPlayer()));
-        cacheMap.merge(cache, distance, (aDouble, aDouble2) -> aDouble + aDouble2);
+        String cache = event.getPlayer().getUniqueId()
+                + event.getFrom().getWorld().getUID().toString()
+                + getMoveType(event.getPlayer());
+        cacheMap.merge(cache, distance, Double::sum);
     }
 
     private String getMoveType(Player player) {
@@ -65,13 +66,17 @@ public class PlayerMove implements Listener, Runnable {
     @Override
     public void run() {
         StatManager.getInstance().getStat("Move").ifPresent(stat ->
-                this.cacheMap.forEach((cache, value) ->
-                        PlayerManager.getInstance().getPlayer(cache.player).subscribe(statsPlayer ->
+                this.cacheMap.forEach((cache, value) -> {
+                            String playerUuid = cache.substring(0, 36);
+                            String worldUuid = cache.substring(36, 72);
+                            String moveType = cache.substring(72);
+                            PlayerManager.getInstance().getPlayer(UUID.fromString(playerUuid)).subscribe(statsPlayer ->
                                 statsPlayer.getStats(stat).addEntry(
                                         new StatTimeEntry(System.currentTimeMillis(), value,
-                                                Util.of("world", cache.world, "type", cache.moveType))
+                                                Util.of("world", UUID.fromString(worldUuid), "type", moveType))
                                 )
-                        )
+                            );
+                        }
                 )
         );
         this.cacheMap.clear();
