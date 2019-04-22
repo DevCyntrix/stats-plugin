@@ -82,24 +82,4 @@ public class PlayerMove implements Listener, Runnable {
         this.cacheMap.clear();
     }
 
-    private class PlayerMoveCache {
-        private UUID player, world;
-        private String moveType;
-
-        PlayerMoveCache(UUID player, UUID world, String moveType) {
-            this.player = player;
-            this.world = world;
-            this.moveType = moveType;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            PlayerMoveCache that = (PlayerMoveCache) o;
-            if (!player.equals(that.player)) return false;
-            if (!world.equals(that.world)) return false;
-            return moveType.equals(that.moveType);
-        }
-    }
 }
