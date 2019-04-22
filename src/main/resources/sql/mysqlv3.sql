@@ -69,4 +69,7 @@ ALTER TABLE `stats_xp_gained`
   DROP PRIMARY KEY,
   ADD UNIQUE INDEX `unique_idx` (`player` ASC, `world` ASC);
 
+DELETE
+FROM stats_system
+WHERE version <= 3;
 REPLACE INTO stats_system VALUE (3);

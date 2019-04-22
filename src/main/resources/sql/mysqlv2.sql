@@ -425,6 +425,9 @@ CREATE TABLE IF NOT EXISTS `stats_system`
   `version` int(10) unsigned NOT NULL
 );
 
+DELETE
+FROM stats_system
+WHERE version <= 2;
 REPLACE INTO stats_system VALUE (2);
 
 #

@@ -1,6 +1,7 @@
 package nl.lolmewn.stats.storage.mysql.upgrade;
 
 import nl.lolmewn.stats.Settings;
+import nl.lolmewn.stats.storage.mysql.MySQLUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -57,9 +58,23 @@ public class MySQLUpgrader {
 
     private int getCurrentVersion(Connection con) {
         try {
-            PreparedStatement st = con.prepareStatement("SELECT version FROM stats_system");
-            ResultSet set = st.executeQuery();
-            return set.next() ? set.getInt("version") : 0;
+            if (MySQLUtil.tableExists(con, "stats_system")) {
+                PreparedStatement st = con.prepareStatement("SELECT version FROM stats_system");
+                ResultSet set = st.executeQuery();
+                if (!set.next()) {
+                    System.err.println("[ERR] Could not find latest version of Stats database, assuming it was deleted...");
+                    return 0;
+                }
+                return set.getInt("version");
+            }
+            if (!MySQLUtil.tableExists(con, "stats_block_place")) {
+                // Probably there's nothing there yet.
+                return 0;
+            }
+            if (MySQLUtil.columnExists(con, "stats_block_place", "timestamp")) {
+                return 1; // Old version
+            }
+            throw new IllegalStateException("Unknown database version");
         } catch (SQLException ignored) {
             // Ignore the exception, table doesn't exist
         }
