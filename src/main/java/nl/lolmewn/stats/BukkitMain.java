@@ -16,6 +16,7 @@ import nl.lolmewn.stats.player.StatsPlayer;
 import nl.lolmewn.stats.stat.StatManager;
 import nl.lolmewn.stats.storage.mysql.MySQLConfig;
 import nl.lolmewn.stats.storage.mysql.MySQLStorage;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -76,6 +77,7 @@ public class BukkitMain extends JavaPlugin {
         if (!super.getConfig().getBoolean("global-stats-opt-out", false)) {
             this.globalStats = new GlobalStats(super.getConfig().getString("version", "v5.3"));
         }
+        new Metrics(this);
     }
 
     private void checkConversion() {

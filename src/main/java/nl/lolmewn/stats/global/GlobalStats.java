@@ -81,7 +81,7 @@ public class GlobalStats {
         factory.setAutomaticRecoveryEnabled(true);
         factory.setUsername("stats5");
         factory.setPassword("stats5");
-        factory.setHost("localhost");
+        factory.setHost("globalstats.nl");
         factory.setPort(5672);
         this.rabbitMqConnection = factory.newConnection();
         this.channel = this.rabbitMqConnection.createChannel();
