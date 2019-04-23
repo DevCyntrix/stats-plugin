@@ -7,6 +7,7 @@ import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import nl.lolmewn.stats.converters.Stats2;
+import nl.lolmewn.stats.converters.Stats3;
 import nl.lolmewn.stats.global.GlobalStats;
 import nl.lolmewn.stats.listener.Playtime;
 import nl.lolmewn.stats.listener.bukkit.*;
@@ -81,20 +82,12 @@ public class BukkitMain extends JavaPlugin {
     }
 
     private void checkConversion() {
-        if (getConfig().contains("storage-version")) {
-            // Stats3
-        }
-        if (getConfig().contains("snapshots")) {
-            // Stats2
+        if (getConfig().contains("storage-version")
+                || (getConfig().contains("convertFrom") && getConfig().getInt("convertFrom") == 3)) {
+            new Stats3(this.getConfig());
+        } else if (getConfig().contains("snapshots")
+                || (getConfig().contains("convertFrom") && getConfig().getInt("convertFrom") == 2)) {
             new Stats2(this.getConfig());
-        }
-        if (getConfig().contains("convertFrom")) {
-            if (getConfig().getInt("convertFrom") == 2) {
-                new Stats2(this.getConfig());
-            }
-            if (getConfig().getInt("convertFrom") == 3) {
-
-            }
         }
     }
 
