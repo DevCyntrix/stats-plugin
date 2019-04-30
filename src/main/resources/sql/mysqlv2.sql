@@ -193,13 +193,13 @@ DELETE
 FROM stats_buckets_emptied
 WHERE id <= @rows;
 ALTER TABLE `stats_buckets_emptied`
-  DROP COLUMN `id`,
-  DROP COLUMN `timestamp`,
-  ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `amount`,
-  CHANGE COLUMN `type` `type` VARCHAR(255) NOT NULL ,
-  DROP PRIMARY KEY,
-  ADD PRIMARY KEY (`player`, `world`, `type`),
-  DROP INDEX `id_UNIQUE`;
+    DROP COLUMN `id`,
+    DROP COLUMN `timestamp`,
+    ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `amount`,
+    CHANGE COLUMN `type` `type` VARCHAR(127) NOT NULL ,
+    DROP PRIMARY KEY,
+    ADD PRIMARY KEY (`player`, `world`, `type`),
+    DROP INDEX `id_UNIQUE`;
 
 SELECT @rows := MAX(id)
 FROM stats_damage_taken;
@@ -211,22 +211,22 @@ DELETE
 FROM stats_damage_taken
 WHERE id <= @rows;
 ALTER TABLE `stats_damage_taken`
-  DROP COLUMN `id`,
-  DROP COLUMN `timestamp`,
-  ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `amount`,
-  CHANGE COLUMN `type` `type` VARCHAR(255) NOT NULL ,
-  DROP PRIMARY KEY,
-  ADD PRIMARY KEY (`type`, `world`, `player`),
-  DROP INDEX `id_UNIQUE`;
+    DROP COLUMN `id`,
+    DROP COLUMN `timestamp`,
+    ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `amount`,
+    CHANGE COLUMN `type` `type` VARCHAR(127) NOT NULL ,
+    DROP PRIMARY KEY,
+    ADD PRIMARY KEY (`type`, `world`, `player`),
+    DROP INDEX `id_UNIQUE`;
 
 ALTER TABLE `stats_death`
-  DROP COLUMN `loc_z`,
-  DROP COLUMN `loc_y`,
-  DROP COLUMN `loc_x`,
-  DROP COLUMN `timestamp`,
-  ADD COLUMN `amount` DOUBLE NOT NULL DEFAULT 1,
-  ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  CHANGE COLUMN `cause` `cause` VARCHAR(255) NOT NULL;
+    DROP COLUMN `loc_z`,
+    DROP COLUMN `loc_y`,
+    DROP COLUMN `loc_x`,
+    DROP COLUMN `timestamp`,
+    ADD COLUMN `amount` DOUBLE NOT NULL DEFAULT 1,
+    ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CHANGE COLUMN `cause` `cause` VARCHAR(127) NOT NULL;
 SELECT @rows := MAX(id)
 FROM stats_death;
 INSERT INTO stats_death (player, world, amount, cause)
@@ -247,13 +247,13 @@ DELETE
 FROM stats_fish_caught
 WHERE id <= @rows;
 ALTER TABLE `stats_fish_caught`
-  DROP COLUMN `timestamp`,
-  DROP COLUMN `id`,
-  CHANGE COLUMN `type` `type` VARCHAR(255) NOT NULL AFTER `world`,
-  ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  DROP PRIMARY KEY,
-  ADD PRIMARY KEY (`player`, `world`, `type`),
-  DROP INDEX `id_UNIQUE`;
+    DROP COLUMN `timestamp`,
+    DROP COLUMN `id`,
+    CHANGE COLUMN `type` `type` VARCHAR(127) NOT NULL AFTER `world`,
+    ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    DROP PRIMARY KEY,
+    ADD PRIMARY KEY (`player`, `world`, `type`),
+    DROP INDEX `id_UNIQUE`;
 
 SELECT @rows := MAX(id)
 FROM stats_food_consumed;
@@ -265,13 +265,13 @@ DELETE
 FROM stats_food_consumed
 WHERE id <= @rows;
 ALTER TABLE `stats_food_consumed`
-  DROP COLUMN `timestamp`,
-  DROP COLUMN `id`,
-  CHANGE COLUMN `type` `type` VARCHAR(255) NOT NULL AFTER `world`,
-  ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  DROP PRIMARY KEY,
-  ADD PRIMARY KEY (`player`, `world`, `type`),
-  DROP INDEX `id_UNIQUE`;
+    DROP COLUMN `timestamp`,
+    DROP COLUMN `id`,
+    CHANGE COLUMN `type` `type` VARCHAR(127) NOT NULL AFTER `world`,
+    ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    DROP PRIMARY KEY,
+    ADD PRIMARY KEY (`player`, `world`, `type`),
+    DROP INDEX `id_UNIQUE`;
 
 SELECT @rows := MAX(id)
 FROM stats_items_crafted;
@@ -283,13 +283,13 @@ DELETE
 FROM stats_items_crafted
 WHERE id <= @rows;
 ALTER TABLE `stats_items_crafted`
-  DROP COLUMN `timestamp`,
-  DROP COLUMN `id`,
-  CHANGE COLUMN `type` `type` VARCHAR(255) NOT NULL AFTER `world`,
-  ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  DROP PRIMARY KEY,
-  ADD PRIMARY KEY (`player`, `world`, `type`),
-  DROP INDEX `id_UNIQUE`;
+    DROP COLUMN `timestamp`,
+    DROP COLUMN `id`,
+    CHANGE COLUMN `type` `type` VARCHAR(127) NOT NULL AFTER `world`,
+    ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    DROP PRIMARY KEY,
+    ADD PRIMARY KEY (`player`, `world`, `type`),
+    DROP INDEX `id_UNIQUE`;
 
 SELECT @rows := MAX(id)
 FROM stats_items_dropped;
@@ -301,13 +301,13 @@ DELETE
 FROM stats_items_dropped
 WHERE id <= @rows;
 ALTER TABLE `stats_items_dropped`
-  DROP COLUMN `timestamp`,
-  DROP COLUMN `id`,
-  CHANGE COLUMN `type` `type` VARCHAR(255) NOT NULL AFTER `world`,
-  ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  DROP PRIMARY KEY,
-  ADD PRIMARY KEY (`player`, `world`, `type`),
-  DROP INDEX `id_UNIQUE`;
+    DROP COLUMN `timestamp`,
+    DROP COLUMN `id`,
+    CHANGE COLUMN `type` `type` VARCHAR(127) NOT NULL AFTER `world`,
+    ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    DROP PRIMARY KEY,
+    ADD PRIMARY KEY (`player`, `world`, `type`),
+    DROP INDEX `id_UNIQUE`;
 
 SELECT @rows := MAX(id)
 FROM stats_items_picked_up;
@@ -319,13 +319,13 @@ DELETE
 FROM stats_items_picked_up
 WHERE id <= @rows;
 ALTER TABLE `stats_items_picked_up`
-  DROP COLUMN `timestamp`,
-  DROP COLUMN `id`,
-  CHANGE COLUMN `type` `type` VARCHAR(255) NOT NULL AFTER `world`,
-  ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  DROP PRIMARY KEY,
-  ADD PRIMARY KEY (`player`, `world`, `type`),
-  DROP INDEX `id_UNIQUE`;
+    DROP COLUMN `timestamp`,
+    DROP COLUMN `id`,
+    CHANGE COLUMN `type` `type` VARCHAR(127) NOT NULL AFTER `world`,
+    ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    DROP PRIMARY KEY,
+    ADD PRIMARY KEY (`player`, `world`, `type`),
+    DROP INDEX `id_UNIQUE`;
 
 ALTER TABLE `stats_kill`
   DROP COLUMN `timestamp`,
@@ -354,13 +354,13 @@ DELETE
 FROM stats_move
 WHERE id <= @rows;
 ALTER TABLE `stats_move`
-  DROP COLUMN `timestamp`,
-  DROP COLUMN `id`,
-  CHANGE COLUMN `type` `type` VARCHAR(255) NOT NULL AFTER `world`,
-  ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP ,
-  DROP PRIMARY KEY,
-  ADD PRIMARY KEY (`player`, `world`, `type`),
-  DROP INDEX `id_UNIQUE`;
+    DROP COLUMN `timestamp`,
+    DROP COLUMN `id`,
+    CHANGE COLUMN `type` `type` VARCHAR(127) NOT NULL AFTER `world`,
+    ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP ,
+    DROP PRIMARY KEY,
+    ADD PRIMARY KEY (`player`, `world`, `type`),
+    DROP INDEX `id_UNIQUE`;
 
 CREATE TABLE IF NOT EXISTS `stats_players`
 (
@@ -384,13 +384,13 @@ DELETE
 FROM stats_times_sheared
 WHERE id <= @rows;
 ALTER TABLE `stats_times_sheared`
-  DROP COLUMN `timestamp`,
-  DROP COLUMN `id`,
-  CHANGE COLUMN `type` `type` VARCHAR(255) NOT NULL AFTER `world`,
-  ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP ,
-  DROP PRIMARY KEY,
-  ADD PRIMARY KEY (`player`, `world`, `type`),
-  DROP INDEX `id_UNIQUE`;
+    DROP COLUMN `timestamp`,
+    DROP COLUMN `id`,
+    CHANGE COLUMN `type` `type` VARCHAR(127) NOT NULL AFTER `world`,
+    ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP ,
+    DROP PRIMARY KEY,
+    ADD PRIMARY KEY (`player`, `world`, `type`),
+    DROP INDEX `id_UNIQUE`;
 
 SELECT @rows := MAX(id)
 FROM stats_tools_broken;
@@ -402,13 +402,13 @@ DELETE
 FROM stats_tools_broken
 WHERE id <= @rows;
 ALTER TABLE `stats_tools_broken`
-  DROP COLUMN `timestamp`,
-  DROP COLUMN `id`,
-  CHANGE COLUMN `type` `type` VARCHAR(255) NOT NULL AFTER `world`,
-  ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP ,
-  DROP PRIMARY KEY,
-  ADD PRIMARY KEY (`player`, `world`, `type`),
-  DROP INDEX `id_UNIQUE`;
+    DROP COLUMN `timestamp`,
+    DROP COLUMN `id`,
+    CHANGE COLUMN `type` `type` VARCHAR(127) NOT NULL AFTER `world`,
+    ADD COLUMN `last_updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP ,
+    DROP PRIMARY KEY,
+    ADD PRIMARY KEY (`player`, `world`, `type`),
+    DROP INDEX `id_UNIQUE`;
 
 CREATE TABLE `stats_worlds`
 (
