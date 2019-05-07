@@ -71,10 +71,13 @@ public class Stats3 {
     private void makeManualDatabaseBackup() {
         try {
             ResultSet set = this.con.createStatement().executeQuery("SHOW TABLES");
+            System.out.println("Backing up all tables...");
             while (set.next()) {
                 String originalName = set.getString(1);
                 String destName = originalName + "_backup";
+                System.out.println("Creating " + destName + "...");
                 this.con.createStatement().execute("CREATE TABLE " + destName + " LIKE " + originalName);
+                System.out.println("Copying data from " + originalName + " to " + destName);
                 this.con.createStatement().execute("INSERT " + destName + " SELECT * FROM " + originalName);
             }
         } catch (SQLException ex) {

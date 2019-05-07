@@ -40,11 +40,11 @@ public class BukkitMain extends JavaPlugin {
         RxJavaProtocolValidator.setOnViolationHandler(Throwable::printStackTrace);
         Schedulers.start();
 
+        this.checkConversion();
+
         super.getConfig().addDefault("server-id", UUID.randomUUID().toString());
         super.getConfig().options().copyDefaults(true);
         super.saveConfig();
-
-        this.checkConversion();
 
         if (super.getConfig().getString("mysql.username", "username").equals("username")) {
             getLogger().info("Stats is not yet configured");
@@ -82,9 +82,9 @@ public class BukkitMain extends JavaPlugin {
     }
 
     private void checkConversion() {
-        if (getConfig().contains("storage-version")
+        if (getConfig().contains("storage")
                 || (getConfig().contains("convertFrom") && getConfig().getInt("convertFrom") == 3)) {
-            new Stats3(this.getConfig());
+            new Stats3(this);
         } else if (getConfig().contains("snapshots")
                 || (getConfig().contains("convertFrom") && getConfig().getInt("convertFrom") == 2)) {
             new Stats2(this.getConfig());
