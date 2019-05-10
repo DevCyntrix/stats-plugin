@@ -2,12 +2,17 @@ package nl.lolmewn.stats;
 
 import hu.akarnokd.rxjava2.debug.validator.RxJavaProtocolValidator;
 import io.reactivex.schedulers.Schedulers;
+import me.staartvin.plugins.pluginlibrary.Library;
+import me.staartvin.plugins.pluginlibrary.PluginLibrary;
+import me.staartvin.plugins.pluginlibrary.hooks.AutorankHook;
+import me.staartvin.plugins.pluginlibrary.hooks.LibraryHook;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import nl.lolmewn.stats.converters.Stats2;
 import nl.lolmewn.stats.global.GlobalStats;
+import nl.lolmewn.stats.hooks.AutoRankCompatibility;
 import nl.lolmewn.stats.listener.Playtime;
 import nl.lolmewn.stats.listener.bukkit.*;
 import nl.lolmewn.stats.player.PlayerManager;
@@ -78,6 +83,18 @@ public class BukkitMain extends JavaPlugin {
             this.globalStats = new GlobalStats(super.getConfig().getString("version", "v5.3"));
         }
         new Metrics(this);
+
+        this.hookAddons();
+    }
+
+    private void hookAddons() {
+        if (getServer().getPluginManager().getPlugin("PluginLibrary") != null) {
+            LibraryHook hook = PluginLibrary.getLibrary(Library.AUTORANK);
+            if (hook.isAvailable()) {
+                AutorankHook autorankHook = (AutorankHook) hook;
+                new AutoRankCompatibility(autorankHook);
+            }
+        }
     }
 
     private void checkConversion() {
