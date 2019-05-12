@@ -13,6 +13,7 @@ import nl.lolmewn.stats.listener.bukkit.*;
 import nl.lolmewn.stats.player.PlayerManager;
 import nl.lolmewn.stats.player.SimpleStatContainer;
 import nl.lolmewn.stats.player.StatsPlayer;
+import nl.lolmewn.stats.signs.BukkitSignListener;
 import nl.lolmewn.stats.stat.StatManager;
 import nl.lolmewn.stats.storage.mysql.MySQLConfig;
 import nl.lolmewn.stats.storage.mysql.MySQLStorage;
@@ -71,6 +72,7 @@ public class BukkitMain extends JavaPlugin {
         new PlayerMove(this);
         new Playtime();
         new SimpleStatsListener(this);
+        new BukkitSignListener(this);
 
         SharedMain.serverUuid = super.getConfig().getString("server-id");
         SharedMain.setDebug(super.getConfig().getBoolean("debug", false));
