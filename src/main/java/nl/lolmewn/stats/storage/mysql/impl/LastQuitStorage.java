@@ -14,7 +14,7 @@ public class LastQuitStorage implements StatMySQLHandler {
     @Override
     public Collection<StatTimeEntry> loadEntries(Connection con, UUID uuid) throws SQLException {
         List<StatTimeEntry> entries = new ArrayList<>();
-        try (PreparedStatement st = con.prepareStatement("SELECT `timestamp`,HEX(world) as world_uuid FROM stats_last_quit WHERE player=UNHEX(?)")) {
+        try (PreparedStatement st = con.prepareStatement("SELECT `timestamp`,HEX(world) as world_uuid FROM stats_last_quit WHERE player=UNHEX(?) ORDER BY timestamp DESC LIMIT 1")) {
             st.setString(1, uuid.toString().replace("-", ""));
             ResultSet set = st.executeQuery();
             while (set != null && set.next()) {
