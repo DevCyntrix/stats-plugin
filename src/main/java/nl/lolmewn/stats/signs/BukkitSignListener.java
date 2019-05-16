@@ -18,9 +18,11 @@ import java.util.*;
 
 public class BukkitSignListener implements Listener {
 
+    private final Plugin plugin;
     private Map<UUID, BukkitStatSignInstallProgress> installers = new HashMap<>();
 
     public BukkitSignListener(Plugin plugin) {
+        this.plugin = plugin;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
@@ -63,14 +65,34 @@ public class BukkitSignListener implements Listener {
                 case STAT_MODE:
                     this.handleStatMode(event, installer.get());
                     break;
+                case INTERVAL:
+                    this.handleInterval(event, installer.get());
             }
+        }
+    }
+
+    private void handleInterval(AsyncPlayerChatEvent event, BukkitStatSignInstallProgress installer) {
+        try {
+            int seconds = Integer.parseInt(event.getMessage());
+            installer.interval = seconds;
+            event.getPlayer().sendMessage("Interval set to " + seconds + " seconds.");
+            event.getPlayer().sendMessage("Cool! We're done here. Stat sign created!");
+            this.finish(installer);
+        } catch (NumberFormatException ignored) {
+            event.getPlayer().sendMessage("Your input was not a number: " + event.getMessage());
+            event.getPlayer().sendMessage("Please try again.");
         }
     }
 
     private void handlePlayer(AsyncPlayerChatEvent event, BukkitStatSignInstallProgress installer) {
         if (event.getMessage().equalsIgnoreCase("done")) {
-            event.getPlayer().sendMessage("Cool! We're done here. Stat sign created!");
-            this.finish(installer);
+            if (installer.statMode != StatsSignStatMode.SINGLE || installer.playerMode != StatsSignPlayerMode.SINGLE) {
+                event.getPlayer().sendMessage("Please enter the interval in seconds for switching what is being displayed");
+                installer.state = SignInstallState.INTERVAL;
+            } else {
+                event.getPlayer().sendMessage("Cool! We're done here. Stat sign created!");
+                this.finish(installer);
+            }
             return;
         }
         OfflinePlayer player = Bukkit.getPlayer(event.getMessage());
@@ -84,8 +106,13 @@ public class BukkitSignListener implements Listener {
         }
         installer.players.add(player.getUniqueId());
         if (installer.playerMode == StatsSignPlayerMode.SINGLE) {
-            event.getPlayer().sendMessage("Cool! We're done here. Stat sign created!");
-            this.finish(installer);
+            if (installer.statMode != StatsSignStatMode.SINGLE) {
+                event.getPlayer().sendMessage("Please enter the interval in seconds for switching what is being displayed");
+                installer.state = SignInstallState.INTERVAL;
+            } else {
+                event.getPlayer().sendMessage("Cool! We're done here. Stat sign created!");
+                this.finish(installer);
+            }
         } else {
             event.getPlayer().sendMessage("Player " + player.getName() + " added. Any other players?");
             event.getPlayer().sendMessage("Or type 'done' if you have added all players you wish.");
@@ -112,8 +139,8 @@ public class BukkitSignListener implements Listener {
                     installer.state = SignInstallState.PLAYER;
                     break;
                 case RANDOM:
-                    event.getPlayer().sendMessage("Cool! We're done here. Stat sign created!");
-                    this.finish(installer);
+                    event.getPlayer().sendMessage("Please enter the interval in seconds for switching what is being displayed");
+                    installer.state = SignInstallState.INTERVAL;
                     break;
                 default:
                     event.getPlayer().sendMessage("Unknown type: " + playerMode.get());
@@ -123,9 +150,9 @@ public class BukkitSignListener implements Listener {
 
     private void finish(BukkitStatSignInstallProgress installer) {
         this.installers.remove(installer.pid);
-        StatsSign sign = new BukkitStatsSign(UUID.randomUUID(), installer.location.getBlockX(), installer.location.getBlockY(),
-                installer.location.getBlockZ(), installer.location.getWorld().getUID(),
-                new StatsSignSpec(installer.playerMode, installer.statMode, installer.players, installer.stats));
+        StatsSign sign = new BukkitStatsSign(plugin, UUID.randomUUID(), installer.location.getBlockX(),
+                installer.location.getBlockY(), installer.location.getBlockZ(), installer.location.getWorld().getUID(),
+                new StatsSignSpec(installer.playerMode, installer.statMode, installer.players, installer.stats, installer.interval));
         SignManager.getInstance().addSign(sign);
     }
 
@@ -159,14 +186,14 @@ public class BukkitSignListener implements Listener {
         Optional<StatsSignStatMode> statMode = Arrays.stream(StatsSignStatMode.values()).filter(mode -> mode.name().equalsIgnoreCase(event.getMessage())).findAny();
         if (!statMode.isPresent()) {
             event.getPlayer().sendMessage("Could not find stat mode: " + event.getMessage());
-            event.getPlayer().sendMessage("Please tell me what kind of sign you want");
+            event.getPlayer().sendMessage("Please tell me what kind of stats you want to display");
             event.getPlayer().sendMessage("You can simply type it into the chat ");
             event.getPlayer().sendMessage(Arrays.toString(StatsSignStatMode.values()).substring(1).replace("]", ""));
         } else {
             installer.statMode = statMode.get();
             switch (statMode.get()) {
                 case MULTIPLE:
-                    event.getPlayer().sendMessage("Please enter the names of the players you wish to show on this sign, one by one");
+                    event.getPlayer().sendMessage("Please enter the names of the stats you wish to show on this sign, one by one");
                     event.getPlayer().sendMessage("When you've added all the names, type 'done'");
                     installer.state = SignInstallState.STAT;
                     break;
@@ -194,7 +221,7 @@ public class BukkitSignListener implements Listener {
         event.getPlayer().getInventory().addItem(new ItemStack(Material.SIGN, 1));
     }
 
-    private enum SignInstallState {STAT, PLAYER, STAT_MODE, PLAYER_MODE}
+    private enum SignInstallState {STAT, PLAYER, STAT_MODE, PLAYER_MODE, INTERVAL}
 
     private class BukkitStatSignInstallProgress {
         private Location location;
@@ -204,5 +231,6 @@ public class BukkitSignListener implements Listener {
         private StatsSignPlayerMode playerMode;
         private StatsSignStatMode statMode;
         private SignInstallState state;
+        private int interval = 10;
     }
 }

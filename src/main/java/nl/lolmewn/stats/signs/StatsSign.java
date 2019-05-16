@@ -10,6 +10,7 @@ import nl.lolmewn.stats.stat.Stat;
 import nl.lolmewn.stats.stat.StatManager;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 public abstract class StatsSign implements Runnable {
 
@@ -21,7 +22,7 @@ public abstract class StatsSign implements Runnable {
 
     private Collection<Disposable> subscriptions = new ArrayList<>();
 
-    public StatsSign(UUID uuid, int x, int y, int z, UUID world, StatsSignSpec spec) {
+    public StatsSign(UUID uuid, int x, int y, int z, UUID world, StatsSignSpec spec, Consumer<Runnable> scheduler) {
         this.id = uuid;
         this.x = x;
         this.y = y;
@@ -29,7 +30,11 @@ public abstract class StatsSign implements Runnable {
         this.world = world;
         this.spec = spec;
 
-        this.start();
+        if (this.spec.getStatMode() != StatsSignStatMode.SINGLE || this.spec.getPlayerMode() != StatsSignPlayerMode.SINGLE) {
+            scheduler.accept(this);
+        } else {
+            this.start();
+        }
     }
 
     private void start() {
@@ -42,6 +47,7 @@ public abstract class StatsSign implements Runnable {
             Observable<StatsPlayer> playerObservable = PlayerManager.getInstance().getPlayer(spec.getPlayers().iterator().next());
             this.subscriptions.add(playerObservable.subscribe(player -> startPlayer(player, stat), Util::handleError));
         } else if (spec.getPlayerMode() == StatsSignPlayerMode.RANDOM) {
+            if (this.getOnlinePlayers().size() == 0) return;
             UUID playerUUID = this.getOnlinePlayers().get(new Random().nextInt(this.getOnlinePlayers().size()));
             Observable<StatsPlayer> playerObservable = PlayerManager.getInstance().getPlayer(playerUUID);
             this.subscriptions.add(playerObservable.subscribe(player -> startPlayer(player, stat), Util::handleError));
@@ -51,14 +57,15 @@ public abstract class StatsSign implements Runnable {
     }
 
     private Stat pickStat() {
-        if (this.spec.getStats().size() == 0) return null;
         switch (this.spec.getStatMode()) {
             case SINGLE:
+                if (this.spec.getStats().size() == 0) return null;
                 return this.spec.getStats().iterator().next();
             case RANDOM:
                 return new ArrayList<>(StatManager.getInstance().getStats()).get(new Random().nextInt(StatManager.getInstance().getStats().size()));
             case MULTIPLE:
             default:
+                if (this.spec.getStats().size() == 0) return null;
                 return new ArrayList<>(this.spec.getStats()).get(new Random().nextInt(this.spec.getStats().size()));
         }
     }
@@ -83,7 +90,7 @@ public abstract class StatsSign implements Runnable {
 
     @Override
     public void run() {
-
+        this.start();
     }
 
     public UUID getId() {

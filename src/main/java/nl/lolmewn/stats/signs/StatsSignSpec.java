@@ -13,13 +13,19 @@ public class StatsSignSpec {
     private Collection<UUID> players;
     private Collection<Stat> stats;
 
-    private int interval = 10;
+    private int interval;
 
     public StatsSignSpec(StatsSignPlayerMode playerMode, StatsSignStatMode statMode, Collection<UUID> players, Collection<Stat> stats) {
+        this(playerMode, statMode, players, stats, 10);
+    }
+
+    public StatsSignSpec(StatsSignPlayerMode playerMode, StatsSignStatMode statMode, Collection<UUID> players,
+                         Collection<Stat> stats, int interval) {
         this.playerMode = playerMode;
         this.statMode = statMode;
         this.players = players;
         this.stats = stats;
+        this.interval = interval;
     }
 
     public StatsSignPlayerMode getPlayerMode() {

@@ -5,6 +5,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 
 import java.util.List;
 import java.util.UUID;
@@ -12,8 +13,10 @@ import java.util.stream.Collectors;
 
 public class BukkitStatsSign extends StatsSign {
 
-    public BukkitStatsSign(UUID uuid, int x, int y, int z, UUID world, StatsSignSpec spec) {
-        super(uuid, x, y, z, world, spec);
+    public BukkitStatsSign(Plugin plugin, UUID uuid, int x, int y, int z, UUID world, StatsSignSpec spec) {
+        super(uuid, x, y, z, world, spec,
+                (Runnable runnable) -> plugin.getServer().getScheduler()
+                        .runTaskTimer(plugin, runnable, 0, spec.getInterval() * 20));
     }
 
     @Override
