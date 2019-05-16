@@ -92,4 +92,25 @@ public class SignManager {
             System.err.println("Could not save sign :( It'll break after a server restart.");
         }
     }
+
+    public Optional<StatsSign> getSignAt(UUID uid, int x, int y, int z) {
+        return this.signs.values().stream()
+                .filter(sign -> sign.getWorld().equals(uid) && sign.getX() == x && sign.getY() == y && sign.getZ() == z)
+                .findAny();
+    }
+
+    public boolean removeSign(StatsSign statsSign) {
+        statsSign.stop();
+        this.signs.remove(statsSign.getId());
+        try (Connection con = this.storage.getConnection()) {
+            PreparedStatement delete = con.prepareStatement("DELETE FROM stats_signs WHERE id=UNHEX(?)");
+            delete.setString(1, statsSign.getId().toString().replace("-", ""));
+            delete.execute();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.err.println("Could not remove sign :( It'll still be there after a server restart.");
+        }
+        return false;
+    }
 }

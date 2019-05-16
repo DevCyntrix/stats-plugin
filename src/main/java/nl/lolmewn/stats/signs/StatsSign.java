@@ -10,19 +10,21 @@ import nl.lolmewn.stats.stat.Stat;
 import nl.lolmewn.stats.stat.StatManager;
 
 import java.util.*;
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 public abstract class StatsSign implements Runnable {
 
+    private static final List<String> nonsense = Arrays.asList("Last join", "Last quit", "PVP kill streak");
     private final UUID id;
     private final int x, y, z;
     private final UUID world;
     private final StatsSignSpec spec;
     private double value;
+    protected Object runnableResult;
 
     private Collection<Disposable> subscriptions = new ArrayList<>();
 
-    public StatsSign(UUID uuid, int x, int y, int z, UUID world, StatsSignSpec spec, Consumer<Runnable> scheduler) {
+    public StatsSign(UUID uuid, int x, int y, int z, UUID world, StatsSignSpec spec, Function<Runnable, Object> scheduler) {
         this.id = uuid;
         this.x = x;
         this.y = y;
@@ -31,7 +33,7 @@ public abstract class StatsSign implements Runnable {
         this.spec = spec;
 
         if (this.spec.getStatMode() != StatsSignStatMode.SINGLE || this.spec.getPlayerMode() != StatsSignPlayerMode.SINGLE) {
-            scheduler.accept(this);
+            this.runnableResult = scheduler.apply(this);
         } else {
             this.start();
         }
@@ -51,8 +53,12 @@ public abstract class StatsSign implements Runnable {
             UUID playerUUID = this.getOnlinePlayers().get(new Random().nextInt(this.getOnlinePlayers().size()));
             Observable<StatsPlayer> playerObservable = PlayerManager.getInstance().getPlayer(playerUUID);
             this.subscriptions.add(playerObservable.subscribe(player -> startPlayer(player, stat), Util::handleError));
+        } else if (spec.getPlayerMode() == StatsSignPlayerMode.MULTIPLE) {
+            UUID uuid = new ArrayList<>(this.spec.getPlayers()).get(new Random().nextInt(this.spec.getPlayers().size()));
+            Observable<StatsPlayer> playerObservable = PlayerManager.getInstance().getPlayer(uuid);
+            this.subscriptions.add(playerObservable.subscribe(player -> startPlayer(player, stat), Util::handleError));
         } else {
-            this.subscriptions.add(PlayerManager.getInstance().subscribe(player -> startPlayer(player, stat), Util::handleError));
+            this.getOnlinePlayers().forEach(uuid -> this.subscriptions.add(PlayerManager.getInstance().getPlayer(uuid).subscribe(player -> this.startPlayer(player, stat), Util::handleError)));
         }
     }
 
@@ -62,7 +68,11 @@ public abstract class StatsSign implements Runnable {
                 if (this.spec.getStats().size() == 0) return null;
                 return this.spec.getStats().iterator().next();
             case RANDOM:
-                return new ArrayList<>(StatManager.getInstance().getStats()).get(new Random().nextInt(StatManager.getInstance().getStats().size()));
+                List<Stat> list = new ArrayList<>(StatManager.getInstance().getStats());
+                if (this.spec.getPlayerMode() == StatsSignPlayerMode.ALL) {
+                    list.removeIf(stat -> nonsense.contains(stat.getName()));
+                }
+                return list.get(new Random().nextInt(list.size()));
             case MULTIPLE:
             default:
                 if (this.spec.getStats().size() == 0) return null;
@@ -122,4 +132,6 @@ public abstract class StatsSign implements Runnable {
     protected abstract void updateSign(String line1, String line2, String line3, String line4);
 
     protected abstract String getPlayerName(UUID uuid);
+
+    public abstract void stop();
 }

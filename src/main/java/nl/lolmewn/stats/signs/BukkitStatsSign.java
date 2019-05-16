@@ -6,6 +6,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.List;
 import java.util.UUID;
@@ -38,6 +39,11 @@ public class BukkitStatsSign extends StatsSign {
     @Override
     protected String getPlayerName(UUID uuid) {
         return Bukkit.getOfflinePlayer(uuid).getName();
+    }
+
+    @Override
+    public void stop() {
+        if (this.runnableResult != null) ((BukkitTask) this.runnableResult).cancel();
     }
 
     private boolean isActive() {
