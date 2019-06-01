@@ -14,10 +14,13 @@ import java.util.stream.Collectors;
 
 public class BukkitStatsSign extends StatsSign {
 
+    private Plugin plugin;
+
     public BukkitStatsSign(Plugin plugin, UUID uuid, int x, int y, int z, UUID world, StatsSignSpec spec) {
         super(uuid, x, y, z, world, spec,
                 (Runnable runnable) -> plugin.getServer().getScheduler()
                         .runTaskTimer(plugin, runnable, 0, spec.getInterval() * 20));
+        this.plugin = plugin;
     }
 
     @Override
@@ -27,13 +30,16 @@ public class BukkitStatsSign extends StatsSign {
 
     @Override
     protected void updateSign(String line1, String line2, String line3, String line4) {
-        if (!this.isActive()) return;
-        Sign sign = (Sign) Bukkit.getWorld(this.getWorld()).getBlockAt(this.getX(), this.getY(), this.getZ()).getState();
-        sign.setLine(0, line1);
-        sign.setLine(1, line2);
-        sign.setLine(2, line3);
-        sign.setLine(3, line4);
-        sign.update(false, false);
+        if (this.plugin == null) return;
+        this.plugin.getServer().getScheduler().runTask(plugin, () -> {
+            if (!this.isActive()) return;
+            Sign sign = (Sign) Bukkit.getWorld(this.getWorld()).getBlockAt(this.getX(), this.getY(), this.getZ()).getState();
+            sign.setLine(0, line1);
+            sign.setLine(1, line2);
+            sign.setLine(2, line3);
+            sign.setLine(3, line4);
+            sign.update(false, false);
+        });
     }
 
     @Override
