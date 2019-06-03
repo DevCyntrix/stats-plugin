@@ -1,5 +1,7 @@
 package nl.lolmewn.stats.player;
 
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
@@ -53,5 +55,9 @@ public class PlayerManager {
 
     public Disposable subscribe(Consumer<StatsPlayer> playerConsumer, Consumer<? super Throwable> handleError) {
         return this.publishSubject.subscribe(playerConsumer, handleError);
+    }
+
+    public Flowable<StatsPlayer> getObservable() {
+        return this.publishSubject.toFlowable(BackpressureStrategy.BUFFER);
     }
 }
