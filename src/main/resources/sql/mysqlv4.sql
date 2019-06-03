@@ -12,3 +12,5 @@ UPDATE stats_trades_performed
 SET price=REPLACE(REPLACE(REPLACE(price, '{namespace:', ''), 'key:"', ':'), '"},', '",');
 UPDATE stats_trades_performed
 SET item=REPLACE(REPLACE(REPLACE(item, '{namespace:', ''), 'key:"', ':'), '"},', '",');
+
+REPLACE INTO stats_system VALUE (4);
