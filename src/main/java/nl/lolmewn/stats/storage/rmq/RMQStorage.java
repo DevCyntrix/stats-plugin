@@ -34,14 +34,11 @@ public class RMQStorage {
         this.disposable.add(Util.statUpdate((player, container, entry) ->
                 this.disposable.add(Observable.just(player).subscribeOn(Schedulers.io()).subscribe((p) -> {
                     String message = this.gson.toJson(Util.of(
-                            "content", Util.of(
-                                    "playerUuid", player.getUuid().toString(),
-                                    "amount", entry.getAmount(),
-                                    "metadata", entry.getMetadata(),
-                                    "timestamp", entry.getTimestamp()
-                            ),
-                            "stat", container.getStat().getName()
-                    ));
+                            "amount", entry.getAmount(),
+                            "metadata", entry.getMetadata(),
+                            "timestamp", entry.getTimestamp()
+                            )
+                    );
                     SharedMain.debug("Publishing to RMQ: " + message);
                     String routingKey = (container.getStat().getName().replace(" ", "_") + "."
                             + player.getUuid().toString()).toLowerCase();
