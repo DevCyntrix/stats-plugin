@@ -1,5 +1,7 @@
 package nl.lolmewn.stats.player;
 
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.subjects.PublishSubject;
@@ -48,8 +50,8 @@ public class StatsContainer {
         return this.publishSubject.subscribe(timeEntryConsumer, handleError);
     }
 
-    public PublishSubject<StatTimeEntry> getPublishSubject() {
-        return publishSubject;
+    public Flowable<StatTimeEntry> getPublishSubject() {
+        return publishSubject.toFlowable(BackpressureStrategy.BUFFER);
     }
 
     public void reset() {

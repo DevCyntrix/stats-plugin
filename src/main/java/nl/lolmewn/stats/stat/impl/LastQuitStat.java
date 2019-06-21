@@ -27,4 +27,9 @@ public class LastQuitStat extends Stat {
                 LocalDateTime.ofInstant(Instant.ofEpochMilli((long) value), ZoneId.systemDefault());
         return date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
+
+    @Override
+    public String shortFormat(double value) {
+        return this.format(value);
+    }
 }

@@ -20,6 +20,10 @@ public abstract class Stat {
 //        return String.format("%1$,.2f", value);
     }
 
+    public String shortFormat(double value) {
+        return new DecimalFormat("#,##0").format(value);
+    }
+
     public String getName() {
         return name;
     }

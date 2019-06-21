@@ -22,4 +22,9 @@ public class DamageTakenStat extends Stat {
     public String format(double value) {
         return String.format("%1$,.1f hearts", value / 2);
     }
+
+    @Override
+    public String shortFormat(double value) {
+        return this.format(value);
+    }
 }

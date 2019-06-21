@@ -58,7 +58,7 @@ public class GlobalStats {
         return statTimeEntry -> this.disposable.add(Flowable.just(statTimeEntry).subscribeOn(Schedulers.io()).subscribe(entry -> {
             SharedMain.debug(String.format("%s updated %s with %f to %f at %d in thread %s",
                     player.getUuid().toString(), statsContainer.getStat().getName(),
-                    statTimeEntry.getAmount(), statsContainer.getTotal(), statTimeEntry.getTimestamp(),
+                    entry.getAmount(), statsContainer.getTotal(), statTimeEntry.getTimestamp(),
                     Thread.currentThread().getName()));
             String message = this.gson.toJson(Util.of(
                     "serverUuid", SharedMain.getServerUuid(),

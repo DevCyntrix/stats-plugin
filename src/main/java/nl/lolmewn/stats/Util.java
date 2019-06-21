@@ -1,5 +1,12 @@
 package nl.lolmewn.stats;
 
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
+import nl.lolmewn.stats.player.PlayerManager;
+import nl.lolmewn.stats.player.StatTimeEntry;
+import nl.lolmewn.stats.player.StatsContainer;
+import nl.lolmewn.stats.player.StatsPlayer;
+
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,6 +39,19 @@ public class Util {
     public static void handleError(Throwable throwable) {
         System.err.println("Error occurred, see stacktrace below");
         throwable.printStackTrace(System.err);
+    }
+
+    public static Disposable statUpdate(TriConsumer<StatsPlayer, StatsContainer, StatTimeEntry> consumer) {
+        CompositeDisposable disposable = new CompositeDisposable();
+        disposable.add(PlayerManager.getInstance().getObservable()
+                .subscribe(player -> {
+                    disposable.add(player.getObservable()
+                            .subscribe(container -> disposable.add(container.getPublishSubject()
+                                    .subscribe(entry -> consumer.accept(player, container, entry), Util::handleError)), Util::handleError));
+                    player.getContainers().forEach(cont -> // Listen to updates of already-in-place containers
+                            disposable.add(cont.subscribe(entry -> consumer.accept(player, cont, entry), Util::handleError)));
+                }, Util::handleError));
+        return disposable;
     }
 
     public static <V> List<V> of(V v1) {
