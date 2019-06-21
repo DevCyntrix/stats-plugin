@@ -110,8 +110,6 @@ public class BukkitMain extends JavaPlugin {
             this.globalStats = new GlobalStats(super.getConfig().getString("version", "v" + this.getDescription().getVersion()));
         }
         new Metrics(this);
-
-        Util.statUpdate((player, container, entry) -> System.out.println("Update: " + entry));
     }
 
     private boolean startRabbitMq() throws IOException, TimeoutException {
@@ -123,6 +121,7 @@ public class BukkitMain extends JavaPlugin {
         if (!isConfigured(file)) {
             return false;
         }
+
         this.rmqStorage = new RMQStorage(file);
         return true;
     }
