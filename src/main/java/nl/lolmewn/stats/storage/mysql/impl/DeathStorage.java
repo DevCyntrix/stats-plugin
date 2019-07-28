@@ -17,7 +17,7 @@ public class DeathStorage implements StatMySQLHandler {
     @Override
     public Collection<StatTimeEntry> loadEntries(Connection con, UUID uuid) throws SQLException {
         List<StatTimeEntry> entries = new ArrayList<>();
-        try (PreparedStatement st = con.prepareStatement("SELECT *,HEX(world) as world_uuid FROM stats_death WHERE player=UNHEX(?)")) {
+        try (PreparedStatement st = con.prepareStatement("SELECT *,HEX(w.uuid) as world_uuid FROM stats_death t JOIN stats_players p ON p.id=t.player_id JOIN stats_worlds w ON w.id=t.world_id WHERE p.uuid=UNHEX(?)")) {
             st.setString(1, uuid.toString().replace("-", ""));
             ResultSet set = st.executeQuery();
             while (set != null && set.next()) {

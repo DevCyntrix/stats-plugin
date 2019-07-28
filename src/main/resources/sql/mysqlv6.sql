@@ -69,7 +69,6 @@ ALTER TABLE `stats_block_break`
     DROP INDEX `uuid_world`,
     DROP INDEX `id_UNIQUE`,
     DROP PRIMARY KEY,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `material` ASC, `tool` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_block_break` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -77,6 +76,7 @@ SET a.player_id=b.id;
 UPDATE `stats_block_break` a INNER JOIN stats_worlds b ON a.world = b.uuid
 SET a.world_id=b.id;
 ALTER TABLE `stats_block_break`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `material` ASC, `tool` ASC),
     ADD CONSTRAINT `stats_block_break_p_id`
         FOREIGN KEY (`player_id`)
             REFERENCES `stats_players` (`id`)
@@ -99,7 +99,6 @@ ALTER TABLE `stats_block_place`
     DROP KEY `uuid`,
     DROP INDEX `id_UNIQUE`,
     DROP PRIMARY KEY,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `material` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_block_place` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -118,6 +117,7 @@ ALTER TABLE `stats_block_place`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_block_place`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `material` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 
@@ -154,7 +154,6 @@ ALTER TABLE `stats_commands_performed`
     ADD COLUMN `world_id` INT UNSIGNED NOT NULL AFTER `player_id`,
     DROP INDEX `unique_idx`,
     DROP INDEX `uuid_world`,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_commands_performed` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -173,6 +172,7 @@ ALTER TABLE `stats_commands_performed`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_commands_performed`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 
@@ -182,7 +182,6 @@ ALTER TABLE `stats_damage_taken`
     CHANGE COLUMN `type` `type` VARCHAR(127) NOT NULL AFTER `world`,
     DROP PRIMARY KEY ,
     DROP INDEX `uuid_world`,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `type` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_damage_taken` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -201,6 +200,7 @@ ALTER TABLE `stats_damage_taken`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_damage_taken`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `type` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 
@@ -209,7 +209,6 @@ ALTER TABLE `stats_death`
     ADD COLUMN `world_id` INT UNSIGNED NOT NULL AFTER `player_id`,
     DROP INDEX `unique_idx`,
     DROP INDEX `uuid`,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `cause` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_death` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -228,6 +227,7 @@ ALTER TABLE `stats_death`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_death`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `cause` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 
@@ -236,7 +236,6 @@ ALTER TABLE `stats_eggs_thrown`
     ADD COLUMN `world_id` INT UNSIGNED NOT NULL AFTER `player_id`,
     DROP INDEX `unique_idx`,
     DROP INDEX `uuid_world`,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_eggs_thrown` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -255,6 +254,7 @@ ALTER TABLE `stats_eggs_thrown`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_eggs_thrown`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 
@@ -264,7 +264,6 @@ ALTER TABLE `stats_fish_caught`
     CHANGE COLUMN `type` `type` VARCHAR(127) NOT NULL AFTER `world`,
     DROP PRIMARY KEY ,
     DROP INDEX `uuid_world`,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `type` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_fish_caught` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -283,6 +282,7 @@ ALTER TABLE `stats_fish_caught`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_fish_caught`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `type` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 
@@ -292,7 +292,6 @@ ALTER TABLE `stats_food_consumed`
     CHANGE COLUMN `type` `type` VARCHAR(127) NOT NULL AFTER `world`,
     DROP PRIMARY KEY ,
     DROP INDEX `uuid_world`,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `type` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_food_consumed` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -311,6 +310,7 @@ ALTER TABLE `stats_food_consumed`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_food_consumed`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `type` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 
@@ -320,7 +320,6 @@ ALTER TABLE `stats_items_crafted`
     CHANGE COLUMN `type` `type` VARCHAR(127) NOT NULL AFTER `world`,
     DROP PRIMARY KEY ,
     DROP INDEX `uuid_world`,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `type` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_items_crafted` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -339,6 +338,7 @@ ALTER TABLE `stats_items_crafted`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_items_crafted`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `type` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 
@@ -348,7 +348,6 @@ ALTER TABLE `stats_items_dropped`
     CHANGE COLUMN `type` `type` VARCHAR(127) NOT NULL AFTER `world`,
     DROP PRIMARY KEY ,
     DROP INDEX `uuid_world`,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `type` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_items_dropped` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -367,6 +366,7 @@ ALTER TABLE `stats_items_dropped`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_items_dropped`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `type` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 
@@ -376,7 +376,6 @@ ALTER TABLE `stats_items_picked_up`
     CHANGE COLUMN `type` `type` VARCHAR(127) NOT NULL AFTER `world`,
     DROP PRIMARY KEY ,
     DROP INDEX `uuid_world`,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `type` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_items_picked_up` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -395,6 +394,7 @@ ALTER TABLE `stats_items_picked_up`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_items_picked_up`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `type` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 
@@ -403,7 +403,6 @@ ALTER TABLE `stats_kill`
     ADD COLUMN `world_id` INT UNSIGNED NOT NULL AFTER `player_id`,
     DROP INDEX `unique_idx`,
     DROP INDEX `uuid`,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `victimType` ASC, `victimName` ASC, `weapon` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_kill` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -422,6 +421,7 @@ ALTER TABLE `stats_kill`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_kill`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `victimType` ASC, `victimName` ASC, `weapon` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 
@@ -481,7 +481,6 @@ ALTER TABLE `stats_move`
     CHANGE COLUMN `type` `type` VARCHAR(127) NOT NULL AFTER `world`,
     DROP PRIMARY KEY ,
     DROP INDEX `uuid_world`,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `type` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_move` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -500,17 +499,25 @@ ALTER TABLE `stats_move`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_move`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `type` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 
 ALTER TABLE `stats_playtime`
     ADD COLUMN `player_id` INT UNSIGNED NOT NULL FIRST,
     ADD COLUMN `world_id` INT UNSIGNED NOT NULL AFTER `player_id`,
-    DROP INDEX `unique_idx`,
     DROP INDEX `uuid_world`,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
+set @exist := (select count(*)
+               from information_schema.statistics
+               where table_name = 'stats_playtime'
+                 and index_name = 'unique_idx'
+                 and table_schema = database());
+set @sqlstmt :=
+        if(@exist = 0, 'select ''INFO: Index doesnt exist.''', 'ALTER TABLE stats_playtime DROP INDEX unique_idx');
+PREPARE stmt FROM @sqlstmt;
+EXECUTE stmt;
 UPDATE `stats_playtime` a INNER JOIN stats_players b ON a.player = b.uuid
 SET a.player_id=b.id;
 UPDATE `stats_playtime` a INNER JOIN stats_worlds b ON a.world = b.uuid
@@ -527,6 +534,7 @@ ALTER TABLE `stats_playtime`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_playtime`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 
@@ -535,7 +543,6 @@ ALTER TABLE `stats_pvp_kill_streak`
     ADD COLUMN `world_id` INT UNSIGNED NOT NULL AFTER `player_id`,
     DROP INDEX `unique_idx`,
     DROP INDEX `uuid_world`,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_pvp_kill_streak` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -554,6 +561,7 @@ ALTER TABLE `stats_pvp_kill_streak`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_pvp_kill_streak`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 
@@ -562,7 +570,6 @@ ALTER TABLE `stats_pvp_kills`
     ADD COLUMN `world_id` INT UNSIGNED NOT NULL AFTER `player_id`,
     DROP INDEX `unique_idx`,
     DROP INDEX `uuid_world`,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_pvp_kills` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -581,6 +588,7 @@ ALTER TABLE `stats_pvp_kills`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_pvp_kills`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 
@@ -589,7 +597,6 @@ ALTER TABLE `stats_teleports`
     ADD COLUMN `world_id` INT UNSIGNED NOT NULL AFTER `player_id`,
     DROP INDEX `unique_idx`,
     DROP INDEX `uuid_world`,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_teleports` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -608,6 +615,7 @@ ALTER TABLE `stats_teleports`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_teleports`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 
@@ -616,7 +624,6 @@ ALTER TABLE `stats_times_joined`
     ADD COLUMN `world_id` INT UNSIGNED NOT NULL AFTER `player_id`,
     DROP INDEX `unique_idx`,
     DROP INDEX `uuid_world`,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_times_joined` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -635,6 +642,7 @@ ALTER TABLE `stats_times_joined`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_times_joined`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 
@@ -643,7 +651,6 @@ ALTER TABLE `stats_times_kicked`
     ADD COLUMN `world_id` INT UNSIGNED NOT NULL AFTER `player_id`,
     DROP INDEX `unique_idx`,
     DROP INDEX `uuid_world`,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_times_kicked` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -662,6 +669,7 @@ ALTER TABLE `stats_times_kicked`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_times_kicked`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 
@@ -671,7 +679,6 @@ ALTER TABLE `stats_times_sheared`
     CHANGE COLUMN `type` `type` VARCHAR(127) NOT NULL AFTER `world`,
     DROP PRIMARY KEY ,
     DROP INDEX `uuid_world`,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `type` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_times_sheared` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -690,6 +697,7 @@ ALTER TABLE `stats_times_sheared`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_times_sheared`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `type` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 
@@ -699,7 +707,6 @@ ALTER TABLE `stats_tools_broken`
     CHANGE COLUMN `type` `type` VARCHAR(127) NOT NULL AFTER `world`,
     DROP PRIMARY KEY ,
     DROP INDEX `uuid_world`,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `type` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_tools_broken` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -718,6 +725,7 @@ ALTER TABLE `stats_tools_broken`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_tools_broken`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC, `type` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 
@@ -750,7 +758,6 @@ ALTER TABLE `stats_words_said`
     ADD COLUMN `world_id` INT UNSIGNED NOT NULL AFTER `player_id`,
     DROP INDEX `unique_idx`,
     DROP INDEX `uuid_world`,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_words_said` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -769,6 +776,7 @@ ALTER TABLE `stats_words_said`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_words_said`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 
@@ -777,7 +785,6 @@ ALTER TABLE `stats_xp_gained`
     ADD COLUMN `world_id` INT UNSIGNED NOT NULL AFTER `player_id`,
     DROP INDEX `unique_idx`,
     DROP INDEX `uuid_world`,
-    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC),
     ADD INDEX `p_id_idx` (`player_id` ASC),
     ADD INDEX `w_id_idx` (`world_id` ASC);
 UPDATE `stats_xp_gained` a INNER JOIN stats_players b ON a.player = b.uuid
@@ -796,6 +803,7 @@ ALTER TABLE `stats_xp_gained`
             ON DELETE RESTRICT
             ON UPDATE CASCADE;
 ALTER TABLE `stats_xp_gained`
+    ADD PRIMARY KEY (`player_id` ASC, `world_id` ASC),
     DROP COLUMN `world`,
     DROP COLUMN `player`;
 

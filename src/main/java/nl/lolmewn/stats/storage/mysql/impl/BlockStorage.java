@@ -4,7 +4,6 @@ import nl.lolmewn.stats.Util;
 import nl.lolmewn.stats.player.MySQLStatsPlayer;
 import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.player.StatsContainer;
-import nl.lolmewn.stats.player.StatsPlayer;
 import nl.lolmewn.stats.storage.mysql.StatMySQLHandler;
 
 import java.sql.Connection;
@@ -23,10 +22,11 @@ public class BlockStorage implements StatMySQLHandler {
         this.tableName = breaking ? "stats_block_break" : "stats_block_place";
     }
 
+    @SuppressWarnings("SqlResolve") // Shh the not being able to find columns because I'm using this.tableName errors
     @Override
     public Collection<StatTimeEntry> loadEntries(Connection con, UUID uuid) throws SQLException {
         List<StatTimeEntry> entries = new ArrayList<>();
-        try (PreparedStatement st = con.prepareStatement("SELECT *,HEX(world) as world_uuid FROM " + this.tableName + " WHERE player=UNHEX(?)")) {
+        try (PreparedStatement st = con.prepareStatement("SELECT *,HEX(w.uuid) as world_uuid FROM " + this.tableName + " t JOIN stats_players p ON p.id=t.player_id JOIN stats_worlds w ON w.id=t.world_id WHERE p.uuid=UNHEX(?) ")) {
             st.setString(1, uuid.toString().replace("-", ""));
             ResultSet set = st.executeQuery();
             while (set != null && set.next()) {
@@ -56,16 +56,16 @@ public class BlockStorage implements StatMySQLHandler {
     @Override
     public void storeEntry(Connection con, MySQLStatsPlayer player, StatsContainer container, StatTimeEntry entry) throws SQLException {
         if (breaking) {
-            try (PreparedStatement st = con.prepareStatement("INSERT INTO " + this.tableName + " (player, world, material, tool, amount) " +
-                    "VALUES (UNHEX(?), UNHEX(?), ?, ?, ?) ON DUPLICATE KEY UPDATE amount=amount+VALUES(amount)")) {
+            try (PreparedStatement st = con.prepareStatement("INSERT INTO stats_block_break (player_id, world_id, material, tool, amount) " +
+                    "VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount=amount+VALUES(amount)")) {
                 inputCommon(player, entry, st);
                 st.setObject(4, entry.getMetadata().get("tool"));
                 st.setDouble(5, entry.getAmount());
                 st.execute();
             }
         } else {
-            try (PreparedStatement st = con.prepareStatement("INSERT INTO " + this.tableName + " (player, world, material, amount) " +
-                    "VALUES (UNHEX(?), UNHEX(?), ?, ?) ON DUPLICATE KEY UPDATE amount=amount+VALUES(amount)")) {
+            try (PreparedStatement st = con.prepareStatement("INSERT INTO stats_block_place (player_id, world_id, material, amount) " +
+                    "VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount=amount+VALUES(amount)")) {
                 inputCommon(player, entry, st);
                 st.setDouble(4, entry.getAmount());
                 st.execute();
@@ -73,8 +73,8 @@ public class BlockStorage implements StatMySQLHandler {
         }
     }
 
-    private void inputCommon(StatsPlayer player, StatTimeEntry entry, PreparedStatement st) throws SQLException {
-        st.setString(1, player.getUuid().toString().replace("-", ""));
+    private void inputCommon(MySQLStatsPlayer player, StatTimeEntry entry, PreparedStatement st) throws SQLException {
+        st.setInt(1, player.getDbId());
         st.setString(2, entry.getMetadata().get("world").toString().replace("-", ""));
         st.setObject(3, entry.getMetadata().get("material"));
     }

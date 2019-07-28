@@ -131,7 +131,7 @@ public class MySQLStorage extends StorageManager {
     @Override
     public Callable<StatsPlayer> loadPlayer(UUID uuid) {
         return () -> {
-            StatsPlayer statsPlayer = new MySQLStatsPlayer(uuid);
+            StatsPlayer statsPlayer = new MySQLStatsPlayer(uuid, -1);
             this.internalLoadPlayer(statsPlayer);
             return statsPlayer;
         };
