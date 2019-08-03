@@ -3,8 +3,8 @@ set @exist := (select count(*)
                where table_name = 'stats_block_break'
                  and index_name = 'rest_unique'
                  and table_schema = database());
-set @sqlstmt :=
-        if(@exist = 0, 'select ''INFO: Index doesnt exist.''', 'ALTER TABLE stats_block_break DROP INDEX rest_unique');
+set @sqlstmt := if(@exist = 0, 'select ''INFO: Index does not exist.''',
+                   'ALTER TABLE stats_block_break DROP INDEX rest_unique');
 PREPARE stmt FROM @sqlstmt;
 EXECUTE stmt;
 
@@ -13,8 +13,8 @@ set @exist := (select count(*)
                where table_name = 'stats_block_place'
                  and index_name = 'rest_unique'
                  and table_schema = database());
-set @sqlstmt :=
-        if(@exist = 0, 'select ''INFO: Index doesnt exist.''', 'ALTER TABLE stats_block_place DROP INDEX rest_unique');
+set @sqlstmt := if(@exist = 0, 'select ''INFO: Index does not exist.''',
+                   'ALTER TABLE stats_block_place DROP INDEX rest_unique');
 PREPARE stmt FROM @sqlstmt;
 EXECUTE stmt;
 
