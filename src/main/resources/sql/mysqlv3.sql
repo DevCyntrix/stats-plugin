@@ -29,10 +29,9 @@ ALTER TABLE `stats_kill`
   DROP PRIMARY KEY,
   ADD UNIQUE INDEX `unique_idx` (`player` ASC, `world` ASC, `victimType` ASC, `victimName` ASC, `weapon` ASC);
 ALTER TABLE `stats_playtime`
-  DROP COLUMN `id`,
-  DROP INDEX `id_UNIQUE` ,
-  DROP PRIMARY KEY,
-  ADD UNIQUE INDEX `unique_idx` (`player` ASC, `world` ASC);
+    DROP COLUMN `id`,
+    DROP INDEX `id_UNIQUE` ,
+    DROP PRIMARY KEY;
 ALTER TABLE `stats_pvp_kills`
   DROP COLUMN `id`,
   DROP INDEX `id_UNIQUE` ,
