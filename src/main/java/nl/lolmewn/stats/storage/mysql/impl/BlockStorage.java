@@ -57,7 +57,7 @@ public class BlockStorage implements StatMySQLHandler {
     public void storeEntry(Connection con, MySQLStatsPlayer player, StatsContainer container, StatTimeEntry entry) throws SQLException {
         if (breaking) {
             try (PreparedStatement st = con.prepareStatement("INSERT INTO stats_block_break (player_id, world_id, material, tool, amount) " +
-                    "VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount=amount+VALUES(amount)")) {
+                    "VALUES (?, (SELECT id FROM stats_worlds w WHERE w.uuid=UNHEX(?)), ?, ?, ?) ON DUPLICATE KEY UPDATE amount=amount+VALUES(amount)")) {
                 inputCommon(player, entry, st);
                 st.setObject(4, entry.getMetadata().get("tool"));
                 st.setDouble(5, entry.getAmount());
@@ -65,7 +65,7 @@ public class BlockStorage implements StatMySQLHandler {
             }
         } else {
             try (PreparedStatement st = con.prepareStatement("INSERT INTO stats_block_place (player_id, world_id, material, amount) " +
-                    "VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE amount=amount+VALUES(amount)")) {
+                    "VALUES (?, (SELECT id FROM stats_worlds w WHERE w.uuid=UNHEX(?)), ?, ?) ON DUPLICATE KEY UPDATE amount=amount+VALUES(amount)")) {
                 inputCommon(player, entry, st);
                 st.setDouble(4, entry.getAmount());
                 st.execute();
