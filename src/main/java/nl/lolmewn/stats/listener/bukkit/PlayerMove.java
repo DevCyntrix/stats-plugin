@@ -73,7 +73,7 @@ public class PlayerMove implements Listener, Runnable {
                             PlayerManager.getInstance().getPlayer(UUID.fromString(playerUuid)).subscribe(statsPlayer ->
                                 statsPlayer.getStats(stat).addEntry(
                                         new StatTimeEntry(System.currentTimeMillis(), value,
-                                                Util.of("world", UUID.fromString(worldUuid), "type", moveType))
+                                                Util.of("world", worldUuid, "type", moveType))
                                 )
                             );
                         }

@@ -6,8 +6,9 @@ public class MySQLStatsPlayer extends StatsPlayer {
 
     private int dbId;
 
-    public MySQLStatsPlayer(UUID uuid) {
+    public MySQLStatsPlayer(UUID uuid, int dbId) {
         super(uuid);
+        this.dbId = dbId;
     }
 
     public int getDbId() {

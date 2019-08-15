@@ -17,8 +17,10 @@ import nl.lolmewn.stats.player.StatsPlayer;
 import nl.lolmewn.stats.signs.BukkitSignListener;
 import nl.lolmewn.stats.signs.SignManager;
 import nl.lolmewn.stats.stat.StatManager;
+import nl.lolmewn.stats.storage.WorldManager;
 import nl.lolmewn.stats.storage.mysql.MySQLConfig;
 import nl.lolmewn.stats.storage.mysql.MySQLStorage;
+import nl.lolmewn.stats.storage.mysql.MySQLWorldManager;
 import nl.lolmewn.stats.storage.rmq.RMQStorage;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.command.Command;
@@ -40,6 +42,7 @@ public class BukkitMain extends JavaPlugin {
 
     private GlobalStats globalStats;
     private MySQLStorage storage;
+    private WorldManager worldManager;
     private RMQStorage rmqStorage;
 
     @Override
@@ -88,6 +91,7 @@ public class BukkitMain extends JavaPlugin {
 
         try {
             this.storage = new MySQLStorage(this.getMySQLConfig());
+            this.worldManager = new MySQLWorldManager(this.storage);
             new SignManager(this, this.storage);
         } catch (SQLException | IOException e) {
             e.printStackTrace();
@@ -96,6 +100,7 @@ public class BukkitMain extends JavaPlugin {
             return;
         }
 
+        new WorldListener(this, this.worldManager);
         new BlockBreak(this);
         new BlockPlace(this);
         new PlayerDeath(this);
