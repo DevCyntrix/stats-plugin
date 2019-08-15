@@ -11,12 +11,12 @@ public class WorldManager {
     private Map<Integer, UUID> idMap = new HashMap<>();
     private Map<UUID, String> nameMap = new HashMap<>();
 
-    public UUID getWorld(int id) {
-        return idMap.get(id);
+    public Optional<UUID> getWorld(int id) {
+        return Optional.ofNullable(idMap.get(id));
     }
 
-    public int getWorld(UUID uuid) {
-        return worldMap.get(uuid);
+    public Optional<Integer> getWorld(UUID uuid) {
+        return Optional.ofNullable(worldMap.get(uuid));
     }
 
     public String getName(UUID uuid) {
@@ -24,7 +24,7 @@ public class WorldManager {
     }
 
     public String getName(int id) {
-        return Optional.ofNullable(this.getWorld(id)).map(this::getName).orElse(null);
+        return this.getWorld(id).map(this::getName).orElse(null);
     }
 
     public void setWorld(UUID uuid, int id, String name) {
@@ -34,9 +34,10 @@ public class WorldManager {
     }
 
     public int addWorld(UUID uuid, String name) {
-        if (this.worldMap.containsKey(uuid)) return this.getWorld(uuid);
-        int newId = this.idMap.keySet().stream().reduce(0, (a, b) -> a > b ? a : b) + 1;
-        this.setWorld(uuid, newId, name);
-        return newId;
+        return this.getWorld(uuid).orElseGet(() -> {
+            int newId = this.idMap.keySet().stream().reduce(0, (a, b) -> a > b ? a : b) + 1;
+            this.setWorld(uuid, newId, name);
+            return newId;
+        });
     }
 }
