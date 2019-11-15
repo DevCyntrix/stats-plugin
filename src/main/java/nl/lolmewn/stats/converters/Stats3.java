@@ -34,6 +34,7 @@ public class Stats3 {
     }
 
     private void convertData() {
+
     }
 
     private void makeBackups() {
@@ -52,6 +53,8 @@ public class Stats3 {
             Process process = Runtime.getRuntime().exec(cmd);
             InputStream in = process.getInputStream();
             int character;
+            plugin.getLogger().info("Waiting for mysqldump to finish. This might take a while, " +
+                    "depending on your database size. Writing to " + dest);
             while ((character = in.read()) != -1) {
                 ps.write(character);
             }
@@ -70,15 +73,22 @@ public class Stats3 {
 
     private void makeManualDatabaseBackup() {
         try {
-            ResultSet set = this.con.createStatement().executeQuery("SHOW TABLES");
+            //noinspection SqlResolve - Find all tables that start with the prefix.
+            ResultSet set = this.con.createStatement().executeQuery("SHOW TABLES WHERE `Tables_in_" + this.data + "` LIKE \"" + this.prefix + "%\"");
             System.out.println("Backing up all tables...");
+            boolean anyFound = false;
             while (set.next()) {
+                anyFound = true;
                 String originalName = set.getString(1);
                 String destName = originalName + "_backup";
                 System.out.println("Creating " + destName + "...");
                 this.con.createStatement().execute("CREATE TABLE " + destName + " LIKE " + originalName);
                 System.out.println("Copying data from " + originalName + " to " + destName);
                 this.con.createStatement().execute("INSERT " + destName + " SELECT * FROM " + originalName);
+            }
+            if (!anyFound) {
+                throw new IllegalStateException("No tables found to back up - assuming something's wrong, stopping " +
+                        "conversion before we break something!");
             }
         } catch (SQLException ex) {
             throw new IllegalStateException("Could not backup database, stopping conversion of data.", ex);
