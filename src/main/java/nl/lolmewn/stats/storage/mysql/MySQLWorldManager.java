@@ -59,4 +59,16 @@ public class MySQLWorldManager extends WorldManager {
             return null;
         }
     }
+
+    @Override
+    public void setWeather(UUID uid, boolean thundering) {
+        try (Connection con = this.storage.getConnection()) {
+            PreparedStatement st = con.prepareStatement("UPDATE stats_worlds SET raining=? WHERE uuid=UNHEX(?)");
+            st.setBoolean(1, thundering);
+            st.setString(2, uid.toString().replace("-", ""));
+            st.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }

@@ -40,4 +40,8 @@ public class WorldManager {
             return newId;
         });
     }
+
+    public void setWeather(UUID uid, boolean thundering) {
+        throw new IllegalStateException("Can't save weather for world, not implemented");
+    }
 }

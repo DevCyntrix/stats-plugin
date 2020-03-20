@@ -5,7 +5,10 @@ import nl.lolmewn.stats.storage.WorldManager;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.weather.WeatherChangeEvent;
 import org.bukkit.event.world.WorldLoadEvent;
+
+import java.util.UUID;
 
 public class WorldListener implements Listener {
 
@@ -24,5 +27,15 @@ public class WorldListener implements Listener {
     @EventHandler()
     public void loadWorld(WorldLoadEvent event) {
         this.worldManager.addWorld(event.getWorld().getUID(), event.getWorld().getName());
+        this.setWeather(event.getWorld().getUID(), event.getWorld().isThundering());
+    }
+
+    @EventHandler()
+    public void onRain(WeatherChangeEvent event) {
+        this.setWeather(event.getWorld().getUID(), event.toWeatherState());
+    }
+
+    private void setWeather(UUID uid, boolean thundering) {
+        this.worldManager.setWeather(uid, thundering);
     }
 }
