@@ -3,13 +3,16 @@ package nl.lolmewn.stats.listener.bukkit;
 import io.reactivex.disposables.Disposable;
 import nl.lolmewn.stats.BukkitMain;
 import nl.lolmewn.stats.BukkitUtil;
+import nl.lolmewn.stats.SharedMain;
 import nl.lolmewn.stats.Util;
 import nl.lolmewn.stats.player.PlayerManager;
 import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.stat.StatManager;
+import org.bukkit.Material;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -21,8 +24,10 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MerchantInventory;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 
@@ -122,11 +127,28 @@ public class SimpleStatsListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     protected void onItemCraft(CraftItemEvent event) {
-        if (!(event.getWhoClicked() instanceof Player)) {
+        if (!(event.getWhoClicked() instanceof Player) || event.getResult() == Event.Result.DENY) {
             return;
         }
+        int amountCreated;
+        if (event.isShiftClick()) {
+            amountCreated = Arrays.stream(event.getInventory().getMatrix())
+                    .filter(stack -> stack != null && !Material.AIR.equals(stack.getType()))
+                    .mapToInt(ItemStack::getAmount)
+                    .reduce(Integer::min)
+                    .orElse(0) * event.getRecipe().getResult().getAmount();
+            // Check if it fits
+            int stackSize = event.getRecipe().getResult().getMaxStackSize();
+            int space = Arrays.stream(event.getWhoClicked().getInventory().getStorageContents())
+                    .filter(stack -> stack == null || stack.isSimilar(event.getRecipe().getResult()))
+            .mapToInt(stack -> stack == null ? stackSize : stackSize - stack.getAmount()).reduce(Integer::max).orElse(0);
+            amountCreated = Math.min(amountCreated, space);
+        } else {
+            amountCreated = event.getRecipe().getResult().getAmount();
+        }
+        if (amountCreated == 0) return; // This shouldn't ever happen, but just in case
         this.addEntry(event.getWhoClicked().getUniqueId(), "Items crafted",
-                new StatTimeEntry(System.currentTimeMillis(), event.getRecipe().getResult().getAmount(),
+                new StatTimeEntry(System.currentTimeMillis(),  amountCreated,
                         Util.of("world", event.getWhoClicked().getWorld().getUID().toString(),
                                 "type", BukkitUtil.getMaterialType(event.getRecipe().getResult().getType()))));
     }
