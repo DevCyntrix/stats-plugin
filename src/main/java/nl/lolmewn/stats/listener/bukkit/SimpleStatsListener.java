@@ -138,10 +138,7 @@ public class SimpleStatsListener implements Listener {
                     .reduce(Integer::min)
                     .orElse(0) * event.getRecipe().getResult().getAmount();
             // Check if it fits
-            int stackSize = event.getRecipe().getResult().getMaxStackSize();
-            int space = Arrays.stream(event.getWhoClicked().getInventory().getStorageContents())
-                    .filter(stack -> stack == null || stack.isSimilar(event.getRecipe().getResult()))
-            .mapToInt(stack -> stack == null ? stackSize : stackSize - stack.getAmount()).reduce(Integer::max).orElse(0);
+            int space = BukkitUtil.getRoomFor(event.getWhoClicked().getInventory().getStorageContents(), event.getRecipe().getResult());
             amountCreated = Math.min(amountCreated, space);
         } else {
             amountCreated = event.getRecipe().getResult().getAmount();
@@ -241,11 +238,24 @@ public class SimpleStatsListener implements Listener {
         if (!event.getAction().equals(InventoryAction.MOVE_TO_OTHER_INVENTORY) && !event.getAction().equals(InventoryAction.PICKUP_ALL)) {
             return;
         }
-        if (!(event.getWhoClicked() instanceof Player)) {
+        if (!(event.getWhoClicked() instanceof Player) || inventory.getSelectedRecipe() == null) {
             return;
         }
+        int trades = 1;
+        if (event.isShiftClick()) {
+            int possibleTrades = Arrays.stream(inventory.getStorageContents())
+                    .filter(tradeStack -> tradeStack != null && !Material.AIR.equals(tradeStack.getType()) && !tradeStack.isSimilar(inventory.getSelectedRecipe().getResult()))
+                    .mapToInt(tradeStack ->
+                            tradeStack.getAmount() / inventory.getSelectedRecipe().getIngredients().stream()
+                                    .filter(recipe -> recipe.isSimilar(tradeStack))
+                            .mapToInt(ItemStack::getAmount).sum()
+                    ).reduce(Math::min).orElse(0);
+            int space = BukkitUtil.getRoomFor(event.getWhoClicked().getInventory().getStorageContents(), inventory.getSelectedRecipe().getResult());
+            int maxSpaceTraces = space / inventory.getSelectedRecipe().getResult().getAmount();
+            trades = Math.min(possibleTrades, maxSpaceTraces);
+        }
         this.addEntry(event.getWhoClicked().getUniqueId(), "Trades performed",
-                new StatTimeEntry(System.currentTimeMillis(), 1,
+                new StatTimeEntry(System.currentTimeMillis(), trades,
                         Util.of("world", event.getWhoClicked().getWorld().getUID().toString(),
                                 "item", BukkitUtil.getSimpleItem(inventory.getSelectedRecipe().getResult()),
                                 "price", BukkitUtil.getSimpleItems(inventory.getSelectedRecipe().getIngredients()))));

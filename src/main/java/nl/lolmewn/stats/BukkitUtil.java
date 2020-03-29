@@ -3,6 +3,7 @@ package nl.lolmewn.stats;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,5 +31,13 @@ public class BukkitUtil {
 
     public static List<SimpleItem> getSimpleItems(List<ItemStack> ingredients) {
         return ingredients.stream().map(BukkitUtil::getSimpleItem).collect(Collectors.toList());
+    }
+
+    public static int getRoomFor(ItemStack[] contents, ItemStack toFit) {
+        int maxStackSize = toFit.getMaxStackSize();
+        return Arrays.stream(contents)
+                .filter(stack -> stack == null || stack.isSimilar(toFit))
+                .mapToInt(stack -> stack == null ? maxStackSize : maxStackSize - stack.getAmount())
+                .sum();
     }
 }
