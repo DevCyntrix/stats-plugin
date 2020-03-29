@@ -26,6 +26,8 @@ import org.bukkit.inventory.MerchantInventory;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+
 public class SimpleStatsListener implements Listener {
 
     private final BukkitMain plugin;
@@ -189,8 +191,11 @@ public class SimpleStatsListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     protected void onTeleport(PlayerTeleportEvent event) {
-        this.addEntry(event.getPlayer().getUniqueId(), "Teleports",
-                new StatTimeEntry(System.currentTimeMillis(), 1, getMetaData(event.getPlayer())));
+        TeleportCause teleportCause = event.getCause();
+        if (teleportCause != TeleportCause.UNKNOWN && teleportCause != TeleportCause.SPECTATE) {
+            this.addEntry(event.getPlayer().getUniqueId(), "Teleports",
+                    new StatTimeEntry(System.currentTimeMillis(), 1, getMetaData(event.getPlayer())));
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
