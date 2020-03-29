@@ -151,6 +151,7 @@ public class SimpleStatsListener implements Listener {
                 new StatTimeEntry(System.currentTimeMillis(),  amountCreated,
                         Util.of("world", event.getWhoClicked().getWorld().getUID().toString(),
                                 "type", BukkitUtil.getMaterialType(event.getRecipe().getResult().getType()))));
+
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
