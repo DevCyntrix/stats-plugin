@@ -3,10 +3,14 @@ package nl.lolmewn.stats;
 import nl.lolmewn.stats.stat.StatManager;
 import nl.lolmewn.stats.stat.impl.*;
 
+import java.util.logging.Logger;
+
 public class SharedMain {
 
     protected static String serverUuid;
     private static boolean isDebug = false;
+
+    protected static Logger log;
 
     public static String getServerUuid() {
         return serverUuid;
@@ -51,7 +55,7 @@ public class SharedMain {
 
     public static void debug(String message) {
         if (isDebug) {
-            System.out.println("[StatsDebug] " + message);
+            log.info("[StatsDebug] " + message);
         }
     }
 }

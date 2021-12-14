@@ -17,6 +17,7 @@ import nl.lolmewn.stats.player.StatsPlayer;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Logger;
 
 public class GlobalStats {
 
@@ -28,15 +29,19 @@ public class GlobalStats {
     private Connection rabbitMqConnection;
     private Channel channel;
 
-    public GlobalStats(String version) {
+    private Logger log;
+
+    public GlobalStats(Logger log, String version) {
+        this.log = log;
         this.version = version;
+
         try {
             setupRabbitMq();
             this.disposable.add(PlayerManager.getInstance().subscribe(this.getPlayerConsumer(), Util::handleError));
         } catch (IOException | TimeoutException ignored) {
-            System.err.println("Could not set up connection to Global Stats server.");
-            System.err.println("Please report this issue to the developer of Stats.");
-            System.err.println("( https://gitlab.com/lolmewn/stats-plugin/issues )");
+            this.log.severe("Could not set up connection to Global Stats server.");
+            this.log.severe("Please report this issue to the developer of Stats.");
+            this.log.severe("( https://gitlab.com/lolmewn/stats-plugin/issues )");
 //            e.printStackTrace();
         }
     }
