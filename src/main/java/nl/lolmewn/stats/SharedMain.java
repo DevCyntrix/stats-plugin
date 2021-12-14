@@ -10,7 +10,7 @@ public class SharedMain {
     protected static String serverUuid;
     private static boolean isDebug = false;
 
-    protected static Logger log;
+    private static final Logger LOG = Logger.getLogger(SharedMain.class.getName());
 
     public static String getServerUuid() {
         return serverUuid;
@@ -55,7 +55,7 @@ public class SharedMain {
 
     public static void debug(String message) {
         if (isDebug) {
-            log.info("[StatsDebug] " + message);
+            LOG.info("[StatsDebug] " + message);
         }
     }
 }

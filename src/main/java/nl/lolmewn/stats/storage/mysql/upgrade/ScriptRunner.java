@@ -38,15 +38,14 @@ public class ScriptRunner {
 
     private boolean autoCommit;
 
-    private Logger log;
+    private static final Logger LOG = Logger.getLogger(ScriptRunner.class.getName());
 
     private String delimiter = DEFAULT_DELIMITER;
 
     /**
      * Default constructor
      */
-    public ScriptRunner(Logger log, Connection connection, boolean autoCommit) {
-        this.log = log;
+    public ScriptRunner(Connection connection, boolean autoCommit) {
         this.connection = connection;
         this.autoCommit = autoCommit;
     }
@@ -62,7 +61,7 @@ public class ScriptRunner {
             try {
                 if (originalAutoCommit != this.autoCommit) {
                     connection.setAutoCommit(this.autoCommit);
-                    this.log.info("Updated autocommit value to " + this.autoCommit);
+                    this.LOG.info("Updated autocommit value to " + this.autoCommit);
                 }
                 runScript(connection, reader);
             } finally {
@@ -96,7 +95,7 @@ public class ScriptRunner {
                 }
                 String trimmedLine = line.trim();
                 if (trimmedLine.startsWith("--")) {
-                    this.log.info(trimmedLine);
+                    this.LOG.info(trimmedLine);
                 } else if (trimmedLine.length() < 1
                         || trimmedLine.startsWith("//")
                         || trimmedLine.startsWith("#")) {
@@ -107,7 +106,7 @@ public class ScriptRunner {
                     command.append(" ");
                     Statement statement = conn.createStatement();
 
-                    this.log.info("Executing: " + command);
+                    this.LOG.info("Executing: " + command);
 
                     boolean hasResults = statement.execute(command.toString());
                     if (autoCommit && !conn.getAutoCommit()) {
@@ -120,14 +119,14 @@ public class ScriptRunner {
                         int cols = md.getColumnCount();
                         for (int i = 1; i <= cols; i++) {
                             String name = md.getColumnLabel(i);
-                            this.log.info(name + "\t");
+                            this.LOG.info(name + "\t");
                         }
                         while (rs.next()) {
                             for (int i = 1; i <= cols; i++) {
                                 String value = rs.getString(i);
-                                this.log.info(value + "\t");
+                                this.LOG.info(value + "\t");
                             }
-                            this.log.info("");
+                            this.LOG.info("");
                         }
                     }
 
@@ -145,7 +144,7 @@ public class ScriptRunner {
             }
         } catch (SQLException | IOException e) {
             e.fillInStackTrace();
-            this.log.log(Level.SEVERE, "Error executing: " + command, e);
+            this.LOG.log(Level.SEVERE, "Error executing: " + command, e);
             throw e;
         }
     }

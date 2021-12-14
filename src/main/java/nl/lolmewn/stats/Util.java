@@ -19,7 +19,7 @@ public class Util {
     public static final Pattern PATTERN_UUID = Pattern.compile("^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$", Pattern.CASE_INSENSITIVE);
     public static final Pattern PATTERN_HEXED_UUID = Pattern.compile("^([a-z0-9]{8})([a-z0-9]{4})([a-z0-9]{4})([a-z0-9]{4})([a-z0-9]{12})$", Pattern.CASE_INSENSITIVE);
 
-    protected static Logger log;
+    private static final Logger LOG = Logger.getLogger(Util.class.getName());
 
     public static Optional<Integer> getWorldId(String uuid) {
         return generateUUID(uuid).flatMap(val -> MySQLWorldManager.getInstance().getWorld(val));
@@ -48,7 +48,7 @@ public class Util {
     }
 
     public static void handleError(Throwable throwable) {
-        log.log(Level.SEVERE, "Error occurred, see stacktrace", throwable);
+        LOG.log(Level.SEVERE, "Error occurred, see stacktrace", throwable);
         // throwable.printStackTrace();
     }
 

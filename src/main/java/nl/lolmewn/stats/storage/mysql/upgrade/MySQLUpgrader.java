@@ -18,11 +18,9 @@ public class MySQLUpgrader {
     private final int currentVersion;
     private final int latestVersion;
 
-    private Logger log;
+    private static final Logger LOG = Logger.getLogger(MySQLUpgrader.class.getName());
 
-    public MySQLUpgrader(Logger log, Connection connection) throws SQLException, IOException {
-        this.log = log;
-
+    public MySQLUpgrader(Connection connection) throws SQLException, IOException {
         this.settings = new Settings(MySQLUpgrader.class.getResourceAsStream("/sql/db.properties"));
         this.currentVersion = getCurrentVersion(connection);
         this.latestVersion = getLatestVersion();
@@ -32,13 +30,13 @@ public class MySQLUpgrader {
     }
 
     private void startUpgrade(Connection connection) throws SQLException, IOException {
-        this.log.info("Upgrading MySQL from v" + this.currentVersion + " to v" + this.latestVersion);
+        this.LOG.info("Upgrading MySQL from v" + this.currentVersion + " to v" + this.latestVersion);
         connection.setAutoCommit(false);
         connection.createStatement();
         for (int i = this.currentVersion + 1; i <= this.latestVersion; i++) {
             String sqlFile = this.settings.getString("sql_v" + i + "_file");
             if (sqlFile == null || "".equals(sqlFile)) {
-                this.log.severe("Could not find upgrade file to version " + i);
+                this.LOG.severe("Could not find upgrade file to version " + i);
                 connection.rollback();
                 return;
             }
@@ -57,8 +55,8 @@ public class MySQLUpgrader {
         if (in == null) {
             throw new IllegalStateException("File could not be found: " + sqlFile);
         }
-        this.log.info("Upgrading MySQL using " + sqlFile + "...");
-        new ScriptRunner(this.log, connection, false).runScript(new InputStreamReader(in));
+        this.LOG.info("Upgrading MySQL using " + sqlFile + "...");
+        new ScriptRunner(connection, false).runScript(new InputStreamReader(in));
     }
 
     private int getCurrentVersion(Connection con) {
@@ -67,7 +65,7 @@ public class MySQLUpgrader {
                 PreparedStatement st = con.prepareStatement("SELECT version FROM stats_system");
                 ResultSet set = st.executeQuery();
                 if (!set.next()) {
-                    this.log.severe("[ERR] Could not find latest version of Stats database, assuming it was deleted...");
+                    this.LOG.severe("[ERR] Could not find latest version of Stats database, assuming it was deleted...");
                     return 0;
                 }
                 return set.getInt("version");

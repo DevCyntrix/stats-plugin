@@ -46,15 +46,10 @@ public class BukkitMain extends JavaPlugin {
     private WorldManager worldManager;
     private RMQStorage rmqStorage;
 
-    private Logger log;
+    private static final Logger LOG = Logger.getLogger(BukkitMain.class.getName());
 
     @Override
     public void onEnable() {
-        this.log = getLogger();
-
-        Util.log = this.log;
-        SharedMain.log = this.log;
-
         RxJavaProtocolValidator.enableAndChain();
         RxJavaProtocolValidator.setOnViolationHandler(Throwable::printStackTrace);
         Schedulers.start();
@@ -66,9 +61,9 @@ public class BukkitMain extends JavaPlugin {
         this.checkConversion();
 
         if (super.getConfig().getString("mysql.username", "username").equals("username")) {
-            this.log.info("Stats is not yet configured");
-            this.log.info("Stats has generated a config.yml file");
-            this.log.info("Please configure Stats and then restart your server");
+            this.LOG.info("Stats is not yet configured");
+            this.LOG.info("Stats has generated a config.yml file");
+            this.LOG.info("Please configure Stats and then restart your server");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
@@ -76,9 +71,9 @@ public class BukkitMain extends JavaPlugin {
         if (super.getConfig().getBoolean("useRabbitMq", false)) {
             try {
                 if (!startRabbitMq()) {
-                    this.log.info("RabbitMQ for Stats is not yet configured");
-                    this.log.info("Stats has generated a rabbitmq.properties file");
-                    this.log.info("Please configure RabbitMQ for Stats and then restart your server");
+                    this.LOG.info("RabbitMQ for Stats is not yet configured");
+                    this.LOG.info("Stats has generated a rabbitmq.properties file");
+                    this.LOG.info("Please configure RabbitMQ for Stats and then restart your server");
                     getServer().getPluginManager().disablePlugin(this);
                     try {
                         Thread.sleep(5000);
@@ -89,7 +84,7 @@ public class BukkitMain extends JavaPlugin {
                 }
             } catch (IOException | TimeoutException e) {
                 e.printStackTrace();
-                this.log.severe("RabbitMQ error, not starting plugin.");
+                this.LOG.severe("RabbitMQ error, not starting plugin.");
                 getServer().getPluginManager().disablePlugin(this);
                 return;
             }
@@ -98,12 +93,12 @@ public class BukkitMain extends JavaPlugin {
         SharedMain.registerStats();
 
         try {
-            this.storage = new MySQLStorage(this.log, this.getMySQLConfig());
+            this.storage = new MySQLStorage(this.getMySQLConfig());
             this.worldManager = new MySQLWorldManager(this.storage);
-            new SignManager(this, this.log, this.storage);
+            new SignManager(this, this.storage);
         } catch (SQLException | IOException e) {
             e.printStackTrace();
-            this.log.severe("MySQL error, not starting plugin.");
+            this.LOG.severe("MySQL error, not starting plugin.");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
@@ -121,7 +116,7 @@ public class BukkitMain extends JavaPlugin {
         SharedMain.serverUuid = super.getConfig().getString("server-id");
         SharedMain.setDebug(super.getConfig().getBoolean("debug", false));
         if (!super.getConfig().getBoolean("global-stats-opt-out", false)) {
-            this.globalStats = new GlobalStats(this.log, super.getConfig().getString("version", "v" + this.getDescription().getVersion()));
+            this.globalStats = new GlobalStats(super.getConfig().getString("version", "v" + this.getDescription().getVersion()));
         }
 
         // To Do @lolmewn: Get Plugin ID
@@ -192,7 +187,7 @@ public class BukkitMain extends JavaPlugin {
         PlayerManager.getInstance().getPlayer(((Player) sender).getUniqueId()).subscribe(player ->
                 sendStatistics(sender, player), err -> {
             sender.sendMessage(ChatColor.RED + "An Unknown error occurred!");
-            this.log.warning("Command error: " + err);
+            this.LOG.warning("Command error: " + err);
         });
         return true;
     }

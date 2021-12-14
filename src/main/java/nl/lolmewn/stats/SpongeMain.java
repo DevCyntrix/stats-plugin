@@ -14,13 +14,9 @@ import org.spongepowered.api.plugin.Plugin;
 import com.google.inject.Inject;
 
 import java.util.UUID;
-import java.util.logging.Logger;
 
 @Plugin(id = "stats", name = "Stats", version = "5.0", description = "Stats collection", authors = "Lolmewn")
 public class SpongeMain {
-
-    @Inject
-    private Logger log;
 
     private GlobalStats globalStats;
 
@@ -33,7 +29,7 @@ public class SpongeMain {
         new Playtime();
         new BlockBreak(this);
 
-        this.globalStats = new GlobalStats(this.log, "v5.3");
+        this.globalStats = new GlobalStats("v5.3");
         SharedMain.serverUuid = UUID.randomUUID().toString(); // todo
     }
 

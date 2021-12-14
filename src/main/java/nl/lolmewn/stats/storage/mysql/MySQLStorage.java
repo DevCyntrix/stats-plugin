@@ -28,12 +28,10 @@ public class MySQLStorage extends StorageManager {
     private Map<Stat, StatMySQLHandler> handlers = new HashMap<>();
     private CompositeDisposable disposable;
 
-    private Logger log;
+    private static final Logger LOG = Logger.getLogger(MySQLStorage.class.getName());
 
-    public MySQLStorage(Logger log, MySQLConfig config) throws SQLException, IOException {
-        this.log = log;
-
-        this.log.info("Starting MySQL Storage Engine...");
+    public MySQLStorage(MySQLConfig config) throws SQLException, IOException {
+        this.LOG.info("Starting MySQL Storage Engine...");
         this.disposable = new CompositeDisposable();
         HikariConfig hcnf = new HikariConfig();
         hcnf.setJdbcUrl(config.getJdbcUrl());
@@ -41,7 +39,7 @@ public class MySQLStorage extends StorageManager {
         hcnf.setPassword(config.getPassword());
         this.dataSource = new HikariDataSource(hcnf);
         try {
-            this.log.info("Checking MySQL connection...");
+            this.LOG.info("Checking MySQL connection...");
             checkConnection();
         } catch (SQLException e) {
             throw new IllegalStateException("Connection could not be established, please check the MySQL config", e);
@@ -49,7 +47,7 @@ public class MySQLStorage extends StorageManager {
 
         this.registerHandlers();
         this.checkTableUpgrades();
-        this.log.info("MySQL ready to go!");
+        this.LOG.info("MySQL ready to go!");
         this.disposable.add(PlayerManager.getInstance().subscribe(this.getPlayerConsumer(), Util::handleError));
     }
 
@@ -60,13 +58,13 @@ public class MySQLStorage extends StorageManager {
 
     private void checkTableUpgrades() throws SQLException, IOException {
         try (Connection connection = this.getConnection()) {
-            new MySQLUpgrader(this.log, connection);
+            new MySQLUpgrader(connection);
         }
     }
 
     private Consumer<StatsPlayer> getPlayerConsumer() {
         return player -> {
-            this.log.info("New player triggered: " + player.getUuid().toString());
+            this.LOG.info("New player triggered: " + player.getUuid().toString());
             player.getContainers().forEach(cont -> // Listen to updates of already-in-place containers
                     this.disposable.add(cont.subscribe(this.getStatTimeEntryConsumer(player, cont), Util::handleError)));
             this.disposable.add(player.subscribe(this.getContainerConsumer(player), Util::handleError)); // Listen to new containers
@@ -115,7 +113,7 @@ public class MySQLStorage extends StorageManager {
                 try {
                     this.handlers.get(container.getStat()).storeEntry(con, player, container, entry);
                 } catch (SQLException ex) {
-                    this.log.warning(
+                    this.LOG.warning(
                         String.format(
                             "Error occurred when trying to save %s data for player %s, full error below.",
                             container.getStat().getName(), player.getUuid().toString()

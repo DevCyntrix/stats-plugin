@@ -30,12 +30,11 @@ public class SignManager {
     private MySQLStorage storage;
     private Map<UUID, StatsSign> signs = new HashMap<>();
 
-    private Logger log;
+    private static final Logger LOG = Logger.getLogger(SignManager.class.getName());
 
-    public SignManager(Plugin plugin, Logger log, MySQLStorage storage) throws SQLException {
+    public SignManager(Plugin plugin, MySQLStorage storage) throws SQLException {
         signManager = this;
         this.plugin = plugin;
-        this.log = log;
         this.storage = storage;
         this.gson = new GsonBuilder().registerTypeAdapter(Stat.class, new StatTypeAdapter()).create();
         this.loadSigns();
@@ -57,11 +56,11 @@ public class SignManager {
                 Optional<UUID> uuid = Util.generateUUID(set.getString("uuid"));
                 Optional<UUID> worldUUID = Util.generateUUID(set.getString("worldUuid"));
                 if (!uuid.isPresent()) {
-                    this.log.severe("Could not load some sign, ID is not a valid uuid: " + set.getString("worldUuid"));
+                    this.LOG.severe("Could not load some sign, ID is not a valid uuid: " + set.getString("worldUuid"));
                     continue;
                 }
                 if (!worldUUID.isPresent()) {
-                    this.log.severe("Could not load some sign, ID is not a valid uuid: " + set.getString("uuid"));
+                    this.LOG.severe("Could not load some sign, ID is not a valid uuid: " + set.getString("uuid"));
                     continue;
                 }
                 StatsSign sign = new BukkitStatsSign(plugin,
@@ -93,7 +92,7 @@ public class SignManager {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            this.log.severe("Could not save sign :( It'll break after a server restart.");
+            this.LOG.severe("Could not save sign :( It'll break after a server restart.");
         }
     }
 
@@ -113,7 +112,7 @@ public class SignManager {
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
-            this.log.severe("Could not remove sign :( It'll still be there after a server restart.");
+            this.LOG.severe("Could not remove sign :( It'll still be there after a server restart.");
         }
         return false;
     }

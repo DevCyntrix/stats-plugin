@@ -29,19 +29,18 @@ public class GlobalStats {
     private Connection rabbitMqConnection;
     private Channel channel;
 
-    private Logger log;
+    private static final Logger LOG = Logger.getLogger(GlobalStats.class.getName());
 
-    public GlobalStats(Logger log, String version) {
-        this.log = log;
+    public GlobalStats(String version) {
         this.version = version;
 
         try {
             setupRabbitMq();
             this.disposable.add(PlayerManager.getInstance().subscribe(this.getPlayerConsumer(), Util::handleError));
         } catch (IOException | TimeoutException ignored) {
-            this.log.severe("Could not set up connection to Global Stats server.");
-            this.log.severe("Please report this issue to the developer of Stats.");
-            this.log.severe("( https://gitlab.com/lolmewn/stats-plugin/issues )");
+            this.LOG.severe("Could not set up connection to Global Stats server.");
+            this.LOG.severe("Please report this issue to the developer of Stats.");
+            this.LOG.severe("( https://gitlab.com/lolmewn/stats-plugin/issues )");
 //            e.printStackTrace();
         }
     }
