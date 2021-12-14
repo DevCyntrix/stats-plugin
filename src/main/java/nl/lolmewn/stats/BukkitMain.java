@@ -22,6 +22,7 @@ import nl.lolmewn.stats.storage.mysql.MySQLStorage;
 import nl.lolmewn.stats.storage.mysql.MySQLWorldManager;
 import nl.lolmewn.stats.storage.rmq.RMQStorage;
 import nl.lolmewn.stats.Util;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -122,6 +123,9 @@ public class BukkitMain extends JavaPlugin {
         if (!super.getConfig().getBoolean("global-stats-opt-out", false)) {
             this.globalStats = new GlobalStats(this.log, super.getConfig().getString("version", "v" + this.getDescription().getVersion()));
         }
+
+        // To Do @lolmewn: Get Plugin ID
+        /* new Metrics(this, pluginId); */
     }
 
     private boolean startRabbitMq() throws IOException, TimeoutException {
