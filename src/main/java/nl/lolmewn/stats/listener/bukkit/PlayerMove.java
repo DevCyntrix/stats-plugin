@@ -6,17 +6,21 @@ import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.stat.StatManager;
 import org.bukkit.Bukkit;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Vehicle;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.vehicle.VehicleMoveEvent;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,15 +63,13 @@ public class PlayerMove implements Listener, Runnable {
         Location from = event.getFrom();
         Location to = event.getTo();
 
-        double distance;
-
         String moveType = getMoveType(player, from, to);
 
         String cache = player.getUniqueId()
                 + from.getWorld().getUID().toString()
                 + moveType;
 
-        distance = from.distance(to);
+        double distance = from.distance(to);
 
         cacheMap.merge(cache, distance, Double::sum);
     }
@@ -106,6 +108,34 @@ public class PlayerMove implements Listener, Runnable {
         }
 
         return PlayerMoveType.WALKING;
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    protected void onVehicleMove(VehicleMoveEvent event) {
+        Vehicle vehicle = event.getVehicle();
+        EntityType vehicleType = vehicle.getType();
+
+        // Minecart movement does not trigger the "onPlayerMove" event handler
+        if (vehicleType == EntityType.MINECART) {
+            Location from = event.getFrom();
+            Location to = event.getTo();
+
+            List<Entity> passengers = vehicle.getPassengers();
+
+            if (!passengers.isEmpty()) {
+                Entity primaryPassenger = passengers.get(0);
+
+                if (primaryPassenger instanceof Player) {
+                    String cache = primaryPassenger.getUniqueId()
+                        + from.getWorld().getUID().toString()
+                        + vehicleType.toString();
+
+                    double distance = from.distance(to);
+
+                    cacheMap.merge(cache, distance, Double::sum);
+                }
+            }
+        }
     }
 
     @Override
