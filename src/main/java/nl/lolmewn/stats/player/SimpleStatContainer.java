@@ -1,6 +1,6 @@
 package nl.lolmewn.stats.player;
 
-import io.reactivex.disposables.Disposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import nl.lolmewn.stats.Util;
 
 import java.util.HashMap;

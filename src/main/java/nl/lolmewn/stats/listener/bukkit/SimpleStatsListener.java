@@ -1,6 +1,6 @@
 package nl.lolmewn.stats.listener.bukkit;
 
-import io.reactivex.disposables.Disposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import nl.lolmewn.stats.BukkitMain;
 import nl.lolmewn.stats.BukkitUtil;
 import nl.lolmewn.stats.SharedMain;

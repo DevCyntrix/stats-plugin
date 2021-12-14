@@ -1,7 +1,7 @@
 package nl.lolmewn.stats;
 
-import hu.akarnokd.rxjava2.debug.validator.RxJavaProtocolValidator;
-import io.reactivex.schedulers.Schedulers;
+import hu.akarnokd.rxjava3.debug.validator.RxJavaProtocolValidator;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -52,6 +52,7 @@ public class BukkitMain extends JavaPlugin {
     public void onEnable() {
         RxJavaProtocolValidator.enableAndChain();
         RxJavaProtocolValidator.setOnViolationHandler(Throwable::printStackTrace);
+
         Schedulers.start();
 
         super.getConfig().addDefault("server-id", UUID.randomUUID().toString());
