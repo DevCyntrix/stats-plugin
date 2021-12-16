@@ -120,8 +120,8 @@ public class BukkitMain extends JavaPlugin {
             this.globalStats = new GlobalStats(super.getConfig().getString("version", "v" + this.getDescription().getVersion()));
         }
 
-        // To Do @lolmewn: Get Plugin ID
-        /* new Metrics(this, pluginId); */
+        int pluginId = 4523;
+        new Metrics(this, pluginId);
     }
 
     private boolean startRabbitMq() throws IOException, TimeoutException {
