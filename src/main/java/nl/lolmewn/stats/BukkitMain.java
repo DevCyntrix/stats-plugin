@@ -23,6 +23,7 @@ import nl.lolmewn.stats.storage.mysql.MySQLWorldManager;
 import nl.lolmewn.stats.storage.rmq.RMQStorage;
 import nl.lolmewn.stats.Util;
 import org.bstats.bukkit.Metrics;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -206,7 +207,7 @@ public class BukkitMain extends JavaPlugin {
             statValue.setHoverEvent(new HoverEvent(
                     HoverEvent.Action.SHOW_TEXT,
                     new ComponentBuilder(getValuesFor("world", player.getStats(stat).getSimpleStatContainer()).entrySet().stream().map(
-                            entry -> "In " + getServer().getWorld(UUID.fromString(entry.getKey())).getName() + ": " + stat.format(entry.getValue())
+                            entry -> "In " + getWorldName(entry.getKey()) + ": " + stat.format(entry.getValue())
                     ).reduce((s, s2) -> s + "\n" + s2).orElse("No data recorded yet!")).create()
             ));
             sender.spigot().sendMessage(statMessage, colon, statValue);
@@ -219,6 +220,17 @@ public class BukkitMain extends JavaPlugin {
                 .filter(e -> e.getKey().containsKey(metadataKey))
                 .forEach(e -> results.merge(e.getKey().get(metadataKey).toString(), e.getValue(), Double::sum));
         return results;
+    }
+
+    public String getWorldName(String worldId) {
+        try {
+            UUID uuid = UUID.fromString(worldId);
+            World world = getServer().getWorld(uuid);
+            if (world != null) {
+                return world.getName();
+            }
+        } catch (IllegalArgumentException ignored) {}
+        return "Unknown world";
     }
 
     public MySQLStorage getMySQLStorage() {
