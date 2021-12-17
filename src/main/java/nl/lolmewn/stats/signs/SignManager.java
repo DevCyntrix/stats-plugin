@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 public class SignManager {
 
@@ -28,6 +29,8 @@ public class SignManager {
     private final Plugin plugin;
     private MySQLStorage storage;
     private Map<UUID, StatsSign> signs = new HashMap<>();
+
+    private static final Logger LOG = Logger.getLogger(SignManager.class.getName());
 
     public SignManager(Plugin plugin, MySQLStorage storage) throws SQLException {
         signManager = this;
@@ -53,11 +56,11 @@ public class SignManager {
                 Optional<UUID> uuid = Util.generateUUID(set.getString("uuid"));
                 Optional<UUID> worldUUID = Util.generateUUID(set.getString("worldUuid"));
                 if (!uuid.isPresent()) {
-                    System.err.println("Could not load some sign, ID is not a valid uuid: " + set.getString("worldUuid"));
+                    this.LOG.severe("Could not load some sign, ID is not a valid uuid: " + set.getString("worldUuid"));
                     continue;
                 }
                 if (!worldUUID.isPresent()) {
-                    System.err.println("Could not load some sign, ID is not a valid uuid: " + set.getString("uuid"));
+                    this.LOG.severe("Could not load some sign, ID is not a valid uuid: " + set.getString("uuid"));
                     continue;
                 }
                 StatsSign sign = new BukkitStatsSign(plugin,
@@ -89,7 +92,7 @@ public class SignManager {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            System.err.println("Could not save sign :( It'll break after a server restart.");
+            this.LOG.severe("Could not save sign :( It'll break after a server restart.");
         }
     }
 
@@ -109,7 +112,7 @@ public class SignManager {
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
-            System.err.println("Could not remove sign :( It'll still be there after a server restart.");
+            this.LOG.severe("Could not remove sign :( It'll still be there after a server restart.");
         }
         return false;
     }

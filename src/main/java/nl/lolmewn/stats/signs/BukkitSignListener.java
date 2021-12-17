@@ -262,7 +262,7 @@ public class BukkitSignListener implements Listener {
     public void cancelEvent(SignChangeEvent event) {
         event.setCancelled(true);
         event.getBlock().setType(Material.AIR);
-        event.getPlayer().getInventory().addItem(new ItemStack(Material.SIGN, 1));
+        event.getPlayer().getInventory().addItem(new ItemStack(event.getBlock().getType(), 1));
     }
 
     private enum SignInstallState {STAT, PLAYER, STAT_MODE, PLAYER_MODE, INTERVAL}

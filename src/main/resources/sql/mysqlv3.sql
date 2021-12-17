@@ -4,10 +4,10 @@ ALTER TABLE `stats_arrows_shot`
   DROP PRIMARY KEY,
   ADD UNIQUE INDEX `unique_idx` (`player` ASC, `world` ASC);
 ALTER TABLE `stats_beds_entered`
-  DROP COLUMN `id`,
-  DROP INDEX `id_UNIQUE` ,
-  DROP PRIMARY KEY,
-  ADD UNIQUE INDEX `unique_idx` (`player` ASC, `world` ASC);
+    DROP COLUMN `id`,
+    DROP INDEX `id_UNIQUE` ,
+    DROP PRIMARY KEY,
+    ADD UNIQUE INDEX `unique_idx` (`player` ASC, `world` ASC);
 ALTER TABLE `stats_commands_performed`
   DROP COLUMN `id`,
   DROP INDEX `id_UNIQUE` ,

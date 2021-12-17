@@ -1,20 +1,29 @@
 package nl.lolmewn.stats;
 
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import nl.lolmewn.stats.player.PlayerManager;
 import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.player.StatsContainer;
 import nl.lolmewn.stats.player.StatsPlayer;
+import nl.lolmewn.stats.storage.mysql.MySQLWorldManager;
 
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Util {
 
     public static final Pattern PATTERN_UUID = Pattern.compile("^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$", Pattern.CASE_INSENSITIVE);
     public static final Pattern PATTERN_HEXED_UUID = Pattern.compile("^([a-z0-9]{8})([a-z0-9]{4})([a-z0-9]{4})([a-z0-9]{4})([a-z0-9]{12})$", Pattern.CASE_INSENSITIVE);
+
+    private static final Logger LOG = Logger.getLogger(Util.class.getName());
+
+    public static Optional<Integer> getWorldId(String uuid) {
+        return generateUUID(uuid).flatMap(val -> MySQLWorldManager.getInstance().getWorld(val));
+    }
 
     public static Optional<UUID> generateUUID(String hex) {
         try {
@@ -30,6 +39,8 @@ public class Util {
                     }
                     return Optional.of(UUID.fromString(sb.toString()));
                 }
+            } else {
+                return Optional.of(UUID.fromString(hex));
             }
         } catch (Exception ignored) {
         }
@@ -37,8 +48,8 @@ public class Util {
     }
 
     public static void handleError(Throwable throwable) {
-        System.err.println("Error occurred, see stacktrace below");
-        throwable.printStackTrace(System.err);
+        LOG.log(Level.SEVERE, "Error occurred, see stacktrace", throwable);
+        // throwable.printStackTrace();
     }
 
     public static Disposable statUpdate(TriConsumer<StatsPlayer, StatsContainer, StatTimeEntry> consumer) {

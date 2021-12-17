@@ -1,15 +1,18 @@
 package nl.lolmewn.stats.listener.bukkit;
 
-import io.reactivex.disposables.Disposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import nl.lolmewn.stats.BukkitMain;
 import nl.lolmewn.stats.BukkitUtil;
+import nl.lolmewn.stats.SharedMain;
 import nl.lolmewn.stats.Util;
 import nl.lolmewn.stats.player.PlayerManager;
 import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.stat.StatManager;
+import org.bukkit.Material;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -21,10 +24,14 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MerchantInventory;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
+
+import static org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 
 public class SimpleStatsListener implements Listener {
 
@@ -120,13 +127,28 @@ public class SimpleStatsListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     protected void onItemCraft(CraftItemEvent event) {
-        if (!(event.getWhoClicked() instanceof Player)) {
+        if (!(event.getWhoClicked() instanceof Player) || event.getResult() == Event.Result.DENY) {
             return;
         }
+        int amountCreated;
+        if (event.isShiftClick()) {
+            amountCreated = Arrays.stream(event.getInventory().getMatrix())
+                    .filter(stack -> stack != null && !Material.AIR.equals(stack.getType()))
+                    .mapToInt(ItemStack::getAmount)
+                    .reduce(Integer::min)
+                    .orElse(0) * event.getRecipe().getResult().getAmount();
+            // Check if it fits
+            int space = BukkitUtil.getRoomFor(event.getWhoClicked().getInventory().getStorageContents(), event.getRecipe().getResult());
+            amountCreated = Math.min(amountCreated, space);
+        } else {
+            amountCreated = event.getRecipe().getResult().getAmount();
+        }
+        if (amountCreated == 0) return; // This shouldn't ever happen, but just in case
         this.addEntry(event.getWhoClicked().getUniqueId(), "Items crafted",
-                new StatTimeEntry(System.currentTimeMillis(), event.getRecipe().getResult().getAmount(),
+                new StatTimeEntry(System.currentTimeMillis(),  amountCreated,
                         Util.of("world", event.getWhoClicked().getWorld().getUID().toString(),
                                 "type", BukkitUtil.getMaterialType(event.getRecipe().getResult().getType()))));
+
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -189,8 +211,11 @@ public class SimpleStatsListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     protected void onTeleport(PlayerTeleportEvent event) {
-        this.addEntry(event.getPlayer().getUniqueId(), "Teleports",
-                new StatTimeEntry(System.currentTimeMillis(), 1, getMetaData(event.getPlayer())));
+        TeleportCause teleportCause = event.getCause();
+        if (teleportCause != TeleportCause.UNKNOWN && teleportCause != TeleportCause.SPECTATE) {
+            this.addEntry(event.getPlayer().getUniqueId(), "Teleports",
+                    new StatTimeEntry(System.currentTimeMillis(), 1, getMetaData(event.getPlayer())));
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -213,11 +238,24 @@ public class SimpleStatsListener implements Listener {
         if (!event.getAction().equals(InventoryAction.MOVE_TO_OTHER_INVENTORY) && !event.getAction().equals(InventoryAction.PICKUP_ALL)) {
             return;
         }
-        if (!(event.getWhoClicked() instanceof Player)) {
+        if (!(event.getWhoClicked() instanceof Player) || inventory.getSelectedRecipe() == null) {
             return;
         }
+        int trades = 1;
+        if (event.isShiftClick()) {
+            int possibleTrades = Arrays.stream(inventory.getStorageContents())
+                    .filter(tradeStack -> tradeStack != null && !Material.AIR.equals(tradeStack.getType()) && !tradeStack.isSimilar(inventory.getSelectedRecipe().getResult()))
+                    .mapToInt(tradeStack ->
+                            tradeStack.getAmount() / inventory.getSelectedRecipe().getIngredients().stream()
+                                    .filter(recipe -> recipe.isSimilar(tradeStack))
+                            .mapToInt(ItemStack::getAmount).sum()
+                    ).reduce(Math::min).orElse(0);
+            int space = BukkitUtil.getRoomFor(event.getWhoClicked().getInventory().getStorageContents(), inventory.getSelectedRecipe().getResult());
+            int maxSpaceTraces = space / inventory.getSelectedRecipe().getResult().getAmount();
+            trades = Math.min(possibleTrades, maxSpaceTraces);
+        }
         this.addEntry(event.getWhoClicked().getUniqueId(), "Trades performed",
-                new StatTimeEntry(System.currentTimeMillis(), 1,
+                new StatTimeEntry(System.currentTimeMillis(), trades,
                         Util.of("world", event.getWhoClicked().getWorld().getUID().toString(),
                                 "item", BukkitUtil.getSimpleItem(inventory.getSelectedRecipe().getResult()),
                                 "price", BukkitUtil.getSimpleItems(inventory.getSelectedRecipe().getIngredients()))));

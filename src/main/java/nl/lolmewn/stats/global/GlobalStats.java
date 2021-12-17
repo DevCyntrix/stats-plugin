@@ -4,10 +4,10 @@ import com.google.gson.Gson;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import io.reactivex.Flowable;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.functions.Consumer;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.functions.Consumer;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import nl.lolmewn.stats.SharedMain;
 import nl.lolmewn.stats.Util;
 import nl.lolmewn.stats.player.PlayerManager;
@@ -17,6 +17,7 @@ import nl.lolmewn.stats.player.StatsPlayer;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Logger;
 
 public class GlobalStats {
 
@@ -28,15 +29,18 @@ public class GlobalStats {
     private Connection rabbitMqConnection;
     private Channel channel;
 
+    private static final Logger LOG = Logger.getLogger(GlobalStats.class.getName());
+
     public GlobalStats(String version) {
         this.version = version;
+
         try {
             setupRabbitMq();
             this.disposable.add(PlayerManager.getInstance().subscribe(this.getPlayerConsumer(), Util::handleError));
         } catch (IOException | TimeoutException ignored) {
-            System.err.println("Could not set up connection to Global Stats server.");
-            System.err.println("Please report this issue to the developer of Stats.");
-            System.err.println("( https://gitlab.com/lolmewn/stats-plugin/issues )");
+            this.LOG.severe("Could not set up connection to Global Stats server.");
+            this.LOG.severe("Please report this issue to the developer of Stats.");
+            this.LOG.severe("( https://gitlab.com/lolmewn/stats-plugin/issues )");
 //            e.printStackTrace();
         }
     }

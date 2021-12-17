@@ -4,6 +4,7 @@ import nl.lolmewn.stats.Util;
 import nl.lolmewn.stats.player.MySQLStatsPlayer;
 import nl.lolmewn.stats.player.StatTimeEntry;
 import nl.lolmewn.stats.player.StatsContainer;
+import nl.lolmewn.stats.storage.mysql.MySQLWorldManager;
 import nl.lolmewn.stats.storage.mysql.StatMySQLHandler;
 
 import java.sql.*;
@@ -14,13 +15,13 @@ public class LastQuitStorage implements StatMySQLHandler {
     @Override
     public Collection<StatTimeEntry> loadEntries(Connection con, UUID uuid) throws SQLException {
         List<StatTimeEntry> entries = new ArrayList<>();
-        try (PreparedStatement st = con.prepareStatement("SELECT `timestamp`,HEX(world) as world_uuid FROM stats_last_quit WHERE player=UNHEX(?) ORDER BY timestamp DESC LIMIT 1")) {
+        try (PreparedStatement st = con.prepareStatement("SELECT * FROM stats_last_quit t JOIN stats_players p ON p.id=t.player_id WHERE p.uuid=UNHEX(?) ORDER BY timestamp DESC LIMIT 1")) {
             st.setString(1, uuid.toString().replace("-", ""));
             ResultSet set = st.executeQuery();
             while (set != null && set.next()) {
-                Optional<UUID> worldUUID = Util.generateUUID(set.getString("world_uuid"));
+                Optional<UUID> worldUUID = MySQLWorldManager.getInstance().getWorld(set.getInt("world_id"));
                 if (!worldUUID.isPresent()) {
-                    throw new IllegalStateException("Found world UUID that is not a UUID: " + set.getString("world_uuid"));
+                    throw new IllegalStateException("Found world id that is not existing: " + set.getInt("world_id"));
                 }
                 long timestamp = set.getTimestamp("timestamp").getTime();
                 entries.add(new StatTimeEntry(
@@ -33,10 +34,10 @@ public class LastQuitStorage implements StatMySQLHandler {
 
     @Override
     public void storeEntry(Connection con, MySQLStatsPlayer player, StatsContainer container, StatTimeEntry entry) throws SQLException {
-        try (PreparedStatement st = con.prepareStatement("INSERT INTO stats_last_quit (player, world, `timestamp`) " +
-                "VALUES (UNHEX(?), UNHEX(?), ?)")) {
-            st.setString(1, player.getUuid().toString().replace("-", ""));
-            st.setString(2, entry.getMetadata().get("world").toString().replace("-", ""));
+        try (PreparedStatement st = con.prepareStatement("INSERT INTO stats_last_quit (player_id, world_id, `timestamp`) " +
+                "VALUES (?, ?, ?)")) {
+            st.setInt(1, player.getDbId());
+            st.setInt(2, Util.getWorldId(entry.getMetadata().get("world").toString()).orElseThrow(IllegalStateException::new));
             st.setTimestamp(3, new Timestamp(entry.getTimestamp()));
             st.execute();
         }

@@ -1,7 +1,7 @@
 package nl.lolmewn.stats;
 
-import hu.akarnokd.rxjava2.debug.validator.RxJavaProtocolValidator;
-import io.reactivex.schedulers.Schedulers;
+import hu.akarnokd.rxjava3.debug.validator.RxJavaProtocolValidator;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -16,9 +16,12 @@ import nl.lolmewn.stats.player.StatsPlayer;
 import nl.lolmewn.stats.signs.BukkitSignListener;
 import nl.lolmewn.stats.signs.SignManager;
 import nl.lolmewn.stats.stat.StatManager;
+import nl.lolmewn.stats.storage.WorldManager;
 import nl.lolmewn.stats.storage.mysql.MySQLConfig;
 import nl.lolmewn.stats.storage.mysql.MySQLStorage;
+import nl.lolmewn.stats.storage.mysql.MySQLWorldManager;
 import nl.lolmewn.stats.storage.rmq.RMQStorage;
+import nl.lolmewn.stats.Util;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -34,17 +37,22 @@ import java.util.Properties;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Logger;
 
 public class BukkitMain extends JavaPlugin {
 
     private GlobalStats globalStats;
     private MySQLStorage storage;
+    private WorldManager worldManager;
     private RMQStorage rmqStorage;
+
+    private static final Logger LOG = Logger.getLogger(BukkitMain.class.getName());
 
     @Override
     public void onEnable() {
         RxJavaProtocolValidator.enableAndChain();
         RxJavaProtocolValidator.setOnViolationHandler(Throwable::printStackTrace);
+
         Schedulers.start();
 
         super.getConfig().addDefault("server-id", UUID.randomUUID().toString());
@@ -54,9 +62,9 @@ public class BukkitMain extends JavaPlugin {
         this.checkConversion();
 
         if (super.getConfig().getString("mysql.username", "username").equals("username")) {
-            getLogger().info("Stats is not yet configured");
-            getLogger().info("Stats has generated a config.yml file");
-            getLogger().info("Please configure Stats and then restart your server");
+            this.LOG.info("Stats is not yet configured");
+            this.LOG.info("Stats has generated a config.yml file");
+            this.LOG.info("Please configure Stats and then restart your server");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
@@ -64,9 +72,9 @@ public class BukkitMain extends JavaPlugin {
         if (super.getConfig().getBoolean("useRabbitMq", false)) {
             try {
                 if (!startRabbitMq()) {
-                    getLogger().info("RabbitMQ for Stats is not yet configured");
-                    getLogger().info("Stats has generated a rabbitmq.properties file");
-                    getLogger().info("Please configure RabbitMQ for Stats and then restart your server");
+                    this.LOG.info("RabbitMQ for Stats is not yet configured");
+                    this.LOG.info("Stats has generated a rabbitmq.properties file");
+                    this.LOG.info("Please configure RabbitMQ for Stats and then restart your server");
                     getServer().getPluginManager().disablePlugin(this);
                     try {
                         Thread.sleep(5000);
@@ -77,7 +85,7 @@ public class BukkitMain extends JavaPlugin {
                 }
             } catch (IOException | TimeoutException e) {
                 e.printStackTrace();
-                this.getLogger().severe("RabbitMQ error, not starting plugin.");
+                this.LOG.severe("RabbitMQ error, not starting plugin.");
                 getServer().getPluginManager().disablePlugin(this);
                 return;
             }
@@ -87,14 +95,16 @@ public class BukkitMain extends JavaPlugin {
 
         try {
             this.storage = new MySQLStorage(this.getMySQLConfig());
+            this.worldManager = new MySQLWorldManager(this.storage);
             new SignManager(this, this.storage);
         } catch (SQLException | IOException e) {
             e.printStackTrace();
-            this.getLogger().severe("MySQL error, not starting plugin.");
+            this.LOG.severe("MySQL error, not starting plugin.");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
 
+        new WorldListener(this, this.worldManager);
         new BlockBreak(this);
         new BlockPlace(this);
         new PlayerDeath(this);
@@ -109,7 +119,9 @@ public class BukkitMain extends JavaPlugin {
         if (!super.getConfig().getBoolean("global-stats-opt-out", false)) {
             this.globalStats = new GlobalStats(super.getConfig().getString("version", "v" + this.getDescription().getVersion()));
         }
-        new Metrics(this);
+
+        int pluginId = 4523;
+        new Metrics(this, pluginId);
     }
 
     private boolean startRabbitMq() throws IOException, TimeoutException {
@@ -176,7 +188,7 @@ public class BukkitMain extends JavaPlugin {
         PlayerManager.getInstance().getPlayer(((Player) sender).getUniqueId()).subscribe(player ->
                 sendStatistics(sender, player), err -> {
             sender.sendMessage(ChatColor.RED + "An Unknown error occurred!");
-            System.out.println("Command error: " + err);
+            this.LOG.warning("Command error: " + err);
         });
         return true;
     }

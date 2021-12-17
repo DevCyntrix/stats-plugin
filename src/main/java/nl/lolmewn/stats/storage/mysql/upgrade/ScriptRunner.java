@@ -22,9 +22,10 @@ package nl.lolmewn.stats.storage.mysql.upgrade;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
-import java.io.PrintWriter;
 import java.io.Reader;
 import java.sql.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Tool to run database scripts
@@ -37,8 +38,7 @@ public class ScriptRunner {
 
     private boolean autoCommit;
 
-    private PrintWriter logWriter = new PrintWriter(System.out, true);
-    private PrintWriter errorLogWriter = new PrintWriter(System.err, true);
+    private static final Logger LOG = Logger.getLogger(ScriptRunner.class.getName());
 
     private String delimiter = DEFAULT_DELIMITER;
 
@@ -61,7 +61,7 @@ public class ScriptRunner {
             try {
                 if (originalAutoCommit != this.autoCommit) {
                     connection.setAutoCommit(this.autoCommit);
-                    println("Updated autocommit value to " + this.autoCommit);
+                    this.LOG.info("Updated autocommit value to " + this.autoCommit);
                 }
                 runScript(connection, reader);
             } finally {
@@ -95,7 +95,7 @@ public class ScriptRunner {
                 }
                 String trimmedLine = line.trim();
                 if (trimmedLine.startsWith("--")) {
-                    println(trimmedLine);
+                    this.LOG.info(trimmedLine);
                 } else if (trimmedLine.length() < 1
                         || trimmedLine.startsWith("//")
                         || trimmedLine.startsWith("#")) {
@@ -106,7 +106,7 @@ public class ScriptRunner {
                     command.append(" ");
                     Statement statement = conn.createStatement();
 
-                    println("Executing: " + command);
+                    this.LOG.info("Executing: " + command);
 
                     boolean hasResults = statement.execute(command.toString());
                     if (autoCommit && !conn.getAutoCommit()) {
@@ -119,14 +119,14 @@ public class ScriptRunner {
                         int cols = md.getColumnCount();
                         for (int i = 1; i <= cols; i++) {
                             String name = md.getColumnLabel(i);
-                            print(name + "\t");
+                            this.LOG.info(name + "\t");
                         }
                         while (rs.next()) {
                             for (int i = 1; i <= cols; i++) {
                                 String value = rs.getString(i);
-                                print(value + "\t");
+                                this.LOG.info(value + "\t");
                             }
-                            println("");
+                            this.LOG.info("");
                         }
                     }
 
@@ -144,31 +144,12 @@ public class ScriptRunner {
             }
         } catch (SQLException | IOException e) {
             e.fillInStackTrace();
-            printlnError("Error executing: " + command);
-            printlnError(e);
+            this.LOG.log(Level.SEVERE, "Error executing: " + command, e);
             throw e;
         }
     }
 
     private String getDelimiter() {
         return delimiter;
-    }
-
-    private void print(Object o) {
-        if (logWriter != null) {
-            System.out.print(o);
-        }
-    }
-
-    private void println(Object o) {
-        if (logWriter != null) {
-            logWriter.println(o);
-        }
-    }
-
-    private void printlnError(Object o) {
-        if (errorLogWriter != null) {
-            errorLogWriter.println(o);
-        }
     }
 }
